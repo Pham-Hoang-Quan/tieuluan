@@ -1,0 +1,138 @@
+{
+  "proxy": "http://localhost:5500",
+  "name": "blk-design-system-react",
+  "version": "1.2.2",
+  "description": "React version of BLK Design System by Creative Tim",
+  "main": "index.js",
+  "author": "Creative Tim",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creativetimofficial/blk-design-system-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/creativetimofficial/blk-design-system-react/issues"
+  },
+  "homepage": "https://demos.creative-tim.com/blk-design-system-react/#/",
+  "keywords": [
+    "react",
+    "reactjs",
+    "blk",
+    "blk-react",
+    "design",
+    "design-react",
+    "system",
+    "system-react",
+    "design-system",
+    "design-system-react",
+    "blk-design",
+    "blk-design-react",
+    "blk-system",
+    "blk-system-react",
+    "blk-design-system",
+    "blk-design-system-react"
+  ],
+  "dependencies": {
+    "@ant-design/charts": "^1.4.3",
+    "@ant-design/plots": "^2.1.14",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@material-ui/icons": "^4.11.3",
+    "@mui/icons-material": "^5.15.15",
+    "@mui/material": "^5.15.15",
+    "@react-spring/web": "^9.7.3",
+    "@testing-library/jest-dom": "5.16.5",
+    "@testing-library/react": "14.0.0",
+    "@testing-library/user-event": "14.4.3",
+    "@thirdweb-dev/react": "^4.6.5",
+    "@thirdweb-dev/sdk": "^4.0.66",
+    "antd": "^5.16.3",
+    "aos": "^3.0.0-beta.6",
+    "bootstrap": "4.6.2",
+    "browserify-zlib": "^0.2.0",
+    "chart.js": "^3.9.1",
+    "chroma-js": "^2.4.2",
+    "classnames": "2.3.1",
+    "dotenv": "^16.4.5",
+    "ethers": "^5.7.2",
+    "file-saver": "^2.0.5",
+    "firebase": "^10.8.0",
+    "http": "^0.0.1-security",
+    "https-browserify": "^1.0.0",
+    "moment": "^2.29.4",
+    "moralis": "^2.26.1",
+    "nouislider": "15.4.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "perfect-scrollbar": "1.5.5",
+    "qrcode.react": "^3.1.0",
+    "react": ">=16.8.0",
+    "react-chartjs-2": "^3.3.0",
+    "react-datetime": "3.2.0",
+    "react-dom": ">=16.8.0",
+    "react-github-btn": "^1.4.0",
+    "react-redux": "^9.1.0",
+    "react-router-dom": "^6.11.1",
+    "react-scripts": "5.0.1",
+    "react-table": "^7.8.0",
+    "reactstrap": "8.10.0",
+    "recharts": "^2.12.2",
+    "redux": "^5.0.1",
+    "sass": "1.62.1",
+    "stream": "^0.0.2",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "stylis-plugin-rtl": "^2.1.1",
+    "thirdweb": "^5.9.0",
+    "thirdweb-react-monorepo": "github:thirdweb-dev/react",
+    "util": "^0.12.5",
+    "web-vitals": "3.3.1"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "optionalDependencies": {
+    "jquery": "3.7.0",
+    "typescript": "5.0.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start",
+    "compile-sass": "sass src/assets/scss/blk-design-system-react.scss src/assets/css/blk-design-system-react.css",
+    "minify-sass": "sass src/assets/scss/blk-design-system-react.scss src/assets/css/blk-design-system-react.min.css --style compressed"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "overrides": {
+    "svgo": "3.0.2",
+    "chokidar": "3.5.3",
+    "fsevents": "2.3.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.1",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.1"
+  }
+}
