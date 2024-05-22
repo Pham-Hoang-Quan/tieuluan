@@ -1,5 +1,6 @@
 {
     "editor.accessibilityPageSize": 15,
     "editor.cursorBlinking": "blink",
-    "editor.fontSize": 15
+    "editor.fontSize": 12,
+    "editor.fontWeight": "normal"
 }

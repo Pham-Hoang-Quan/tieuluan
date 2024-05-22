@@ -1,6 +1,8 @@
 import React, { useContext, useState, useEffect } from "react";
 // javascript plugin used to create scrollbars on windows
 import PerfectScrollbar from "perfect-scrollbar";
+import { Form, FormGroup, Label, Input } from "reactstrap";
+
 // reactstrap components
 import {
     Button,
@@ -35,9 +37,10 @@ import { getDatabase, ref as dbRef, set, onValue, query, orderByChild, equalTo, 
 import Candidates from "components/CreatePoll/Candidates";
 import { id } from "ethers/lib/utils";
 
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
+
 
 
 
@@ -45,24 +48,22 @@ import moment from "moment";
 import { BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis, Bar, LabelList, Cell, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
 
 import { ethers } from "ethers";
-import { map } from "jquery";
-import UpdateVoteList from "components/DetailVoting/UpdateVoteList";
-import QRCode from 'qrcode.react';
 import QRCodeCan from "components/DetailVoting/QRCodeCan";
 import CandidatesList from "components/DetailVoting/CandidatesList";
 import Top5Table from "../../components/DetailVoting/Top5Table";
 import Top5Chart from "components/DetailVoting/Top5Chart";
 import FinishVoting from "components/DetailVoting/FinishVoting";
+import ModalEdit from "components/DetailVoting/ModalEdit";
 
 let ps = null;
 
 export default function VotingDetail() {
-    const { userData, state, authUser } = useContext(AppContext);
+    const {authUser, setAuthUser} = useContext(AppContext);
     const [candidates, setCandidates] = useState('');
     const [votingInfo, setVotingInfo] = useState();
     const [votedModal, setVotedModal] = useState(false);
     const [trans, setTrans] = useState([]);
-    const { contract } = state;
+    
     const [isLoading, setIsLoading] = useState(false)
     const [userIsVoted, setUserIsVoted] = useState(false);
     const location = useLocation();
@@ -71,6 +72,13 @@ export default function VotingDetail() {
     const [canIdOld, setCanIdOld] = useState('');
     const [isFinished, setIsFinished] = useState(false);
     const userInfor = JSON.parse(localStorage.getItem('user-voting'));
+    const [isOwner, setIsOwner] = useState(false);
+    const [formModal, setFormModal] = useState(false);
+    const [isJoined, setIsJoined] = useState(false);
+    const [password, setPassword] = useState('');
+
+    const navigate = useNavigate();
+
     function generateRandomId() {
         return Date.now(); // Sử dụng thời gian hiện tại làm ID, có thể không đảm bảo tính duy nhất trong một số trường hợp.
     }
@@ -83,13 +91,11 @@ export default function VotingDetail() {
     const handleAddVoteTransOnBC = async (canId) => {
         setIsLoading(true);
         try {
-            console.log("VoteInfo: ", canId, idVoting, userInfor._id);
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
             const contract = await sdk.getContract(smartContractAddress);
             const result = await contract.call("addVote", ['v' + id, userInfor._id, canIdString, idVoting, id]);
             setVotedModal(true);
-            console.log("Result: ", result);
         } catch (error) {
             // alert(error.reason);
             console.log(error.message);
@@ -107,12 +113,9 @@ export default function VotingDetail() {
         try {
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
-            const userId = userData.userId;
             const contract = await sdk.getContract(smartContractAddress);
             const result = await contract.call("updateVote", ['v' + id, userInfor._id, canIdString, canIdOld, idVoting, id]);
             setVotedModal(true);
-            console.log("Trans Data Update: ", id, userId, canId, idVoting, canIdOld);
-            console.log("Result: ", result);
         } catch (error) {
             // alert(error.reason);
             console.log(error.message);
@@ -126,63 +129,37 @@ export default function VotingDetail() {
     }
     // hàm lấy danh sách các ứng viên từ firebase
     const loadCandidates = async () => {
-        // const candidatesRef = query(dbRef(database, 'candidates'));
-        // onValue(candidatesRef, (snapshot) => {
-        //     const candidatesData = snapshot.val();
-        //     if (candidatesData) {
-        //         const candidatesList = Object.values(candidatesData);
-        //         const filteredCandidates = candidatesList.filter(candidate => candidate.idVoting === idVoting);
-        //         setCandidates(filteredCandidates);
-        //         // console.log(filteredCandidates);
-        //         console.log(candidatesList)
-        //         console.log(candidates)
-        //     } else {
-        //         setCandidates([]);
-        //     }
-        // });
-
         try {
             const res = await fetch(`http://localhost:5500/api/votings/getAllCandiddates/${idVoting}`);
             if (res.ok) {
                 const data = await res.json();
-                console.log(data);
                 setCandidates(data);
             }
         } catch (e) {
             console.error(e);
         }
     }
-    // hàm lấy thông của cuộc bình chọn từ firebase
     const loadVotingInfo = async () => {
-        // lấy thông tin cuộc bình chọn từ firebase
-        // try {
-        //     const votingInfoRef = dbRef(database, `polls/` + idVoting);
-        //     onValue(votingInfoRef, (snapshot) => {
-        //         const votingData = snapshot.val();
-        //         if (votingData) {
-        //             // Xử lý dữ liệu ở đây nếu cần
-        //             setVotingInfo(votingData);
-        //             setIsFinished(moment(votingData.endAt, 'YYYYMMDD').isBefore(moment()));
-        //         } else {
-        //             console.log("Không có dữ liệu cho nút này.");
-        //         }
-        //     });
-        // } catch (e) {
-        //     console.error(e);
-        // }
-
         // lấy thông tin cuộc bình chọn từ mongodb
         try {
             const res = await fetch(`http://localhost:5500/api/votings/${idVoting}`);
             if (res.ok) {
                 const data = await res.json();
-                console.log(data);
                 setVotingInfo(data);
+                console.log(data.owner, userInfor._id);
+                if (data.owner == userInfor._id) {
+                    setIsOwner(true);
+                }
+            } else {
+                alert("Voting not found")
+                return (<div></div>)
+                navigate("/")
+
             }
+            setFormModal(false)
         } catch (e) {
             console.error(e);
         }
-
     }
     // hàm lấy các votes từ blockchain
     const getTransWithVotingId = async () => {
@@ -191,24 +168,18 @@ export default function VotingDetail() {
                 const contract = await sdk.getContract(smartContractAddress);
                 const transData = await contract.call("getvotesByIdVoting", [idVoting]);
                 setTrans(transData);
-                console.log("transData", transData);
-                console.log("trans", trans);
             }
         } catch (error) {
             console.error(error);
         }
     };
     useEffect(() => {
-        console.log("trans", trans);
         const userId = userInfor ? userInfor._id : null;
         if (userId) {
             trans.map((tran) => {
                 if (tran.idUser == userId) {
                     setUserIsVoted(true)
                     setCanIdOld(tran.idCandidate)
-
-                    console.log(tran)
-                    console.log("User is voted")
                 } else {
                     console.log("User no vote")
                 }
@@ -216,15 +187,50 @@ export default function VotingDetail() {
         }
     }, [trans]);
     useEffect(() => {
-        try {
-            loadCandidates();
-            loadVotingInfo();
-            // hàm lấy dữ liệu transaction từ Blockchain;
-            getTransWithVotingId();
-        } catch (e) {
-            console.error(e);
-        }
+        const loadData = async () => {
+            try {
+                await loadCandidates();
+                await loadVotingInfo();
+                await getTransWithVotingId();
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        loadData();
     }, []);
+
+    useEffect(() => {
+        // nếu voting là private thì kiểm tra join hay chưa,
+        // là public thì cho isJoined = true
+        // nếu chưa join thì return form để nhập mật khẩu và join
+        if (votingInfo) {
+            if (votingInfo.isPrivate) {
+                const userId = userInfor ? userInfor._id : null;
+                const checkUserJoinVoting = async () => {
+                    try {
+                        const res = await fetch(`http://localhost:5500/api/participants/checkUser/${idVoting}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ userId }),
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            setIsJoined(data.isJoin);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                checkUserJoinVoting();
+            } else if (votingInfo.isPrivate == false) {
+                setIsJoined(true);
+            }
+        }
+
+
+    }, [votingInfo])
 
     React.useEffect(() => {
         if (navigator.platform.indexOf("Win") > -1) {
@@ -235,8 +241,6 @@ export default function VotingDetail() {
                 ps = new PerfectScrollbar(tables[i]);
             }
         }
-        console.log("User: ", userData);
-
         document.body.classList.toggle("profile-page");
         // Specify how to clean up after this effect:
         return function cleanup() {
@@ -283,28 +287,6 @@ export default function VotingDetail() {
         },
     ] : [];
 
-    // const mergedData = [];
-    // for (let i = 0; i < candidates.length; i++) {
-    //     const candidate = candidates[i];
-    //     let countVote = 0;
-    //     if (trans) {
-    //         for (let j = 0; j < trans.length; j++) {
-    //             if (trans[j].id !== "") {
-    //                 console.log("So sánh", trans[j].idCandidate, " với ", candidates[i]._id)
-    //                 if (trans[j].idCandidate.toString() === candidates[i].id.toString()) {
-    //                     countVote++;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     mergedData.push({
-    //         id: candidate._id,
-    //         name: candidate.name,
-    //         description: candidate.description,
-    //         countVote: countVote,
-    //         imgUrl: candidate.imgUrl
-    //     });
-    // }
     const mergedData = candidates.map(candidate => {
         const countVote = trans.reduce((count, tran) => {
             return tran.idCandidate?.toString() === candidate._id?.toString() ? count + 1 : count;
@@ -312,7 +294,6 @@ export default function VotingDetail() {
         return { ...candidate, countVote };
     }).sort((a, b) => b.countVote - a.countVote);
 
-    console.log("Merged Data: ", mergedData);
     const sortedCandidates = mergedData.sort((a, b) => b.countVote - a.countVote);
     const topFiveCandidates = sortedCandidates.slice(0, 5);
 
@@ -320,7 +301,6 @@ export default function VotingDetail() {
         name: candidate.name,
         countVote: candidate.countVote,
     }));
-    console.log("transformedData", transformedData);
 
     if (moment(votingInfo.endAt, 'YYYYMMDD').isBefore(moment())) {
         return (
@@ -336,60 +316,153 @@ export default function VotingDetail() {
             </>
         );
     }
+
+    const handleJoinVoting = async () => {
+        try {
+            const res = await fetch(`http://localhost:5500/api/participants/addUserWithPassword/${idVoting}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: userInfor._id, password }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setIsJoined(data.isJoin);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    if (isJoined == false) {
+        return (
+            <div>
+                <IndexNavbar />
+                <Container
+                    style={{
+                        marginTop: '200px',
+                        // width: '400px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                    }}>
+                    <Form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleJoinVoting();
+                        }}
+                    >
+                        <FormGroup>
+                            <h3 className="text-white">This is a private voting, please enter the password to join</h3>
+
+                            <Label for="password">Password</Label>
+                            <Input
+                                type="password"
+                                name="password"
+                                id="password"
+                                placeholder="Enter password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </FormGroup>
+                        <Button type="submit" color="primary">Join Voting</Button>
+                    </Form>
+                </Container>
+
+            </div >
+        );
+    }
     return (
         <>
             <IndexNavbar />
             <div className="wrapper">
                 <section className="section">
                     <Container>
+                        <Row style={{
+                            marginTop: '20px',
+                        }}>
+                            <h1 className="display-1 text-white">
+                                {votingInfo.title}
+                                {/* {authUser.name} */}
+                            </h1>
+                        </Row>
+                        {/* hàng thông tin */}
                         <Row className="justify-content-between align-items-center"
                         // style={{ marginTop: "60px" }}
                         >
-                            <Col className="mb-5 mb-lg-0" lg="5" style={{ marginTop: "60px" }}>
-                                <h1 className="display-1 text-white">
-                                    {votingInfo.title}
-                                </h1>
-
-                                <Row>
-                                    <Col>
-                                        <footer className="blockquote-footer">Posted: <cite title="Source Title">{moment(`${votingInfo.createAt}`, 'x').fromNow()}</cite></footer>
-                                        <footer className="blockquote-footer">End at: <cite title="Source Title">{moment(`${votingInfo.endAt}`, 'YYYYMMDD').fromNow()}</cite></footer>
-                                    </Col>
-                                    <Col>
-
-                                    </Col>
-                                </Row>
-
-
-                                {userData &&
-                                    <QRCodeCan userId={userInfor._id} votingId={idVoting}></QRCodeCan>
-                                }
-                                {/* <Button
-                                    className="mt-4"
-                                    color="warning"
-                                    href="https://demos.creative-tim.com/blk-design-system-react/#/documentation/alert"
-                                >
-                                    View candidates
-                                </Button> */}
-                                {/* nếu người dùng đã bình chọn thì hiển thị component đã bình chọn */}
-
-                                {/* component update luôn được hiên thị 
-                                    ở update sẽ tự gọi dữ liệu để hiển thị */}
-                                {userData && <UpdateVoteList idVoting={idVoting} userId={userData.userId} >
-                                </UpdateVoteList>}
-
-                            </Col>
+                            {/* cột ảnh và mô tả */}
                             <Col lg="6">
-                                <UncontrolledCarousel
-                                    items={carouselItems}
-                                    indicators={false}
-                                    autoPlay={false}
+                                {/* <UncontrolledCarousel
+                                        items={carouselItems}
+                                        indicators={false}
+                                        autoPlay={false}
+                                    /> */}
+                                <img
+                                    id="uploaded-image"
+                                    alt="Uploaded Image"
+                                    className="img-center img-fluid"
+                                    style={{ width: '500px', height: '300px', objectFit: 'cover' }}
+                                    src={votingInfo.imgUrl}
                                 />
                                 <p className="text-white mt-4">
                                     {votingInfo.description}
                                 </p>
                             </Col>
+                            {/* cột QR code */}
+                            <Col className="mb-5 mb-lg-0" lg="5" style={{ marginTop: "60px" }}>
+                                {/* <h1 className="display-1 text-white">
+                                    {votingInfo.title}
+                                </h1> */}
+
+                                {userInfor &&
+                                    <QRCodeCan userId={userInfor._id} votingId={idVoting}></QRCodeCan>
+                                }
+                                
+
+                                <Row>
+                                    <Col>
+                                        <footer className="blockquote-footer">Posted: <cite title="Source Title">{moment(`${votingInfo.startAt}`, 'YYYYMMDD').fromNow()}</cite></footer>
+                                        <footer className="blockquote-footer">End at: <cite title="Source Title">{moment(`${votingInfo.endAt}`, 'YYYYMMDD').fromNow()}</cite></footer>
+                                    </Col>
+                                </Row>
+                                <Row className="justify-content-between align-items-center">
+                                    {isOwner &&
+                                        <>
+                                            <Button
+                                                className="mt-4"
+                                                color="default"
+                                                onClick={() => setFormModal(true)}
+                                            >
+                                                Update information
+                                            </Button>
+                                            <Button
+                                                className="mt-4"
+                                                color="default"
+                                                onClick={() => {
+                                                    navigate(`/addCandidate?votingId=${idVoting}`)
+                                                }}
+                                            >
+                                                Add Candidate
+                                            </Button>
+                                        </>
+                                    }
+                                    <Button
+                                        className="mt-4"
+                                        color="warning"
+                                        href="#candidates"
+                                    // style={{ position: "relative", top: "20%", left: "45%", transform: "translateX(-50%)" }}
+                                    >
+                                        Go to vote
+                                    </Button>
+                                </Row>
+
+
+
+                            </Col>
+
+
                         </Row>
+                        {/* Các ứng viên */}
                         <Row>
                             <Card className="card-chart card-plain">
                                 <CardHeader>
@@ -415,17 +488,19 @@ export default function VotingDetail() {
                             </Card>
                         </Row>
                         {/* Biểu đồ và bảng top 5 */}
-                        {/* <Row id="candidates">
-                            <Top5Chart transformedData={transformedData}></Top5Chart>
-                            <Top5Table
-                                handleUpdateVoteTransOnBC={handleUpdateVoteTransOnBC}
-                                topFiveCandidates={topFiveCandidates}
-                                handleAddTransOnBC={handleAddVoteTransOnBC}
-                                userIsVoted={userIsVoted}
-                                canIdOld={canIdOld}
-                            >
-                            </Top5Table>
-                        </Row> */}
+                        {isOwner &&
+                            <Row id="candidates">
+                                <Top5Chart transformedData={transformedData}></Top5Chart>
+                                <Top5Table
+                                    handleUpdateVoteTransOnBC={handleUpdateVoteTransOnBC}
+                                    topFiveCandidates={topFiveCandidates}
+                                    handleAddTransOnBC={handleAddVoteTransOnBC}
+                                    userIsVoted={userIsVoted}
+                                    canIdOld={canIdOld}
+                                >
+                                </Top5Table>
+                            </Row>
+                        }
                         <Card className="card-plain">
                             <CardHeader>
                                 <Row style={{ marginBottom: "-50px" }}>
@@ -434,14 +509,6 @@ export default function VotingDetail() {
                                 </Row>
                             </CardHeader>
                         </Card>
-                        {/* // Hiển thị danh sách các ứng viên */}
-                        {/* <CandidatesList
-                            handleUpdateVoteTransOnBC={handleUpdateVoteTransOnBC}
-                            mergedData={mergedData}
-                            handleAddTransOnBC={handleAddVoteTransOnBC}
-                            userIsVoted={userIsVoted}
-                            canIdOld={canIdOld}>
-                        </CandidatesList> */}
                         {mergedData &&
                             <Row id="candidates">
                                 {mergedData.map(candidate => (
@@ -505,6 +572,23 @@ export default function VotingDetail() {
                             </Row>}
                     </Container>
                 </section>
+                <Modal
+                    modalClassName="modal-black"
+                    isOpen={formModal}
+                    toggle={() => setFormModal(false)}
+                    style={{ height: "90%", marginTop: '0px', }}
+                >
+                    <div className="modal-header justify-content-center">
+                        <button className="close" onClick={() => setFormModal(false)}>
+                            <i className="tim-icons icon-simple-remove text-white" />
+                        </button>
+                        <div className="text-muted text-center ml-auto mr-auto">
+                            <h3 className="mb-0">Add candidate</h3>
+                        </div>
+                    </div>
+                    <ModalEdit loadVotingInfo={loadVotingInfo} votingInfo={votingInfo}></ModalEdit>
+
+                </Modal>
             </div>
         </>
     );

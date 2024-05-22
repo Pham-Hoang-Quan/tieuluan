@@ -16,11 +16,15 @@ import {
     Modal,
     UncontrolledAlert,
 } from "reactstrap";
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getDatabase, ref as dbRef, set, onValue, query, orderByChild, equalTo, child, get } from "firebase/database";
 import { database, storage } from "firebase.js";
 import { AppContext } from "context/AppContext";
 import PublicVotings from "components/home/PublicVotings";
+import { MaterialUIControllerProvider } from "context";
+import UploadImage from "components/home/UploadImage";
+import { message } from 'antd';
+
 
 export default function Home({ isLogin }) {
 
@@ -30,35 +34,26 @@ export default function Home({ isLogin }) {
     const [formModal, setFormModal] = React.useState(false);
     const [votingInfo, setVotingInfo] = React.useState();
     const [errorSearch, setErrorSearch] = React.useState(false);
-    const [trans, setTrans] = useState([]);
-    const { userData, state } = useContext(AppContext);
-    const { contract } = state;
     const [password, setPassword] = useState("");
 
+    const [messageApi, contextHolder] = message.useMessage();
+    const warning = (message) => {
+        messageApi.open({
+          type: 'warning',
+          content: message,
+        });
+      };
+
+    const userInfor = JSON.parse(localStorage.getItem("user-voting"));
+
     React.useEffect(() => {
-        console.log(state)
         document.body.classList.toggle("index-page");
         // Specify how to clean up after this effect:
         return function cleanup() {
             document.body.classList.toggle("index-page");
         };
     }, []);
-
-    const getAllTrans = async () => {
-        try {
-            const transData = await contract.getAllTransactions();
-            setTrans(transData)
-            console.log(trans)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    useEffect(() => {
-        contract && getAllTrans()
-    }, [contract])
-
-    const handleJoin = async () => {
+    const handleJoinn = async () => {
         if (votingInfo.isPrivate) {
             try {
                 const res = await fetch(`http://localhost:5500/api/votings/check-password`, {
@@ -73,7 +68,7 @@ export default function Home({ isLogin }) {
                 if (res.ok) {
                     const data = await res.json();
                     console.log(data);
-                    navigate(`/votingDetail?votingId=${votingInfo._id}`);
+                    // navigate(`/votingDetail?votingId=${votingInfo._id}`);
                 } else {
                     alert("Password is incorrect");
                 }
@@ -81,28 +76,54 @@ export default function Home({ isLogin }) {
                 console.error(err);
             }
         } else {
-            navigate(`/votingDetail?votingId=${votingInfo._id}`);
+            // navigate(`/votingDetail?votingId=${votingInfo._id}`);
+        }
+    }
+
+    const handleJoin = async () => {
+        if (votingInfo.isPrivate) {
+            try {
+                const idVoting = votingInfo._id;
+                const res = await fetch(`http://localhost:5500/api/participants/addUserWithPassword/${idVoting}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: userInfor._id, password }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    // setIsJoined(data.isJoin);
+                    navigate(`/votingDetail?votingId=${votingInfo._id}`)
+                } else {
+                    warning("Passwords do not match")
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        } else {
+            try {
+                const idVoting = votingInfo._id;
+                const res = await fetch(`http://localhost:5500/api/participants/addParticipant/${idVoting}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: userInfor._id }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    // setIsJoined(data.isJoin);
+                    navigate(`/votingDetail?votingId=${votingInfo._id}`)
+
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 
     const handleSearch = async () => {
-        try {
-            const votingRef = query(dbRef(database, 'polls/' + idSearch));
-            onValue(votingRef, (snapshot) => {
-                const votingData = snapshot.val();
-                if (votingData) {
-                    // navigate(`/votingDetail?votingId=${votingData.id}`);
-                    setVotingInfo(votingData)
-                    setFormModal(true);
-                } else {
-                    // alert(`Not found ${idSearch}`)
-                    setErrorSearch(true)
-                }
-            });
-        } catch (err) {
-            console.error(err);
-        }
-
         // lấy thong tin voting từ mongodb
         try {
             const res = await fetch(`http://localhost:5500/api/votings/${idSearch}`);
@@ -111,6 +132,8 @@ export default function Home({ isLogin }) {
                 console.log(data);
                 setVotingInfo(data);
                 setFormModal(true);
+            } else {
+                warning("This voting is not available");
             }
         } catch (e) {
             console.error(e);
@@ -119,9 +142,13 @@ export default function Home({ isLogin }) {
 
     return (
         <>
+            {contextHolder}
             <IndexNavbar isLogin={isLogin} />
             <div className="wrapper">
-                <div className="page-header header-filter">
+                <div
+                    className="page-header"
+                    style={{ overflow: 'auto' }}
+                >
                     <div className="squares square1" />
                     <div className="squares square2" />
                     <div className="squares square3" />
@@ -129,9 +156,9 @@ export default function Home({ isLogin }) {
                     <div className="squares square5" />
                     <div className="squares square6" />
                     <div className="squares square7" />
-                    
-                    <Container>
-                        <div className="content-center brand">
+
+                    <Container >
+                        <div className="content-center brand" style={{ position: "relative", top: "28%", left: "50%", right: "0", bottom: "0" }}>
                             {(errorSearch) ? (
                                 <div message="This voting is not exits" type="warning" showIcon />
                             ) : (
@@ -153,7 +180,7 @@ export default function Home({ isLogin }) {
                                                 }
                                             }}
                                         />
-                                        <InputGroupAddon addonType="append">
+                                        <InputGroupAddon onClick={() => handleSearch()} addonType="append">
                                             <InputGroupText
                                                 style={{ borderColor: '#edd0f1' }}
                                             >
@@ -162,20 +189,26 @@ export default function Home({ isLogin }) {
                                         </InputGroupAddon>
                                     </InputGroup>
                                 </Col>
-                                
+
                             </Row>
-                            
-
-                            <Button className="btn-round" color="info" type="button"
-                                onClick={() => { navigate('/createPoll'); }}
-                            >
-                                <i className="fa fa-plus" />
-                                {"       "}Create a poll
-                            </Button>
-
                         </div>
 
+                        <div className="" style={{ marginTop: '137px' }}>
+                            <Row>
+                                <Col lg="12" sm='12'>
+                                    <PublicVotings></PublicVotings>
+                                </Col>
+                            </Row>
+                        </div>
+
+
+
                     </Container>
+
+
+
+
+
                 </div>
                 <Modal
                     // modalClassName="modal-black"
@@ -208,7 +241,7 @@ export default function Home({ isLogin }) {
                                         alt="..."
                                         className="img-fluid rounded shadow"
                                         src={votingInfo.imgUrl}
-                                        style={{ width: "370px" }}
+                                        style={{ width: "370px", height: '180px', objectFit: 'cover' }}
                                     />
                                     {votingInfo.isPrivate ?
                                         <div>

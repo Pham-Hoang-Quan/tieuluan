@@ -15,7 +15,6 @@ export const signup = async (req, res) => {
 		if (user) {
 			return res.status(400).json({ error: "Username already exists" });
 		}
-
 		// HASH PASSWORD HERE
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
@@ -82,3 +81,37 @@ export const logout = (req, res) => {
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
+
+export const changePassword = async (req, res) => {
+	try {
+	  const { userId } = req.params; // Lấy userId từ URL params
+	  const { oldPassword, newPassword } = req.body;
+  
+	  // Tìm user theo userId
+	  const user = await User.findById(userId);
+  
+	  if (!user) {
+		return res.status(404).json({ error: "User not found" });
+	  }
+  
+	  // Kiểm tra oldPassword có đúng không
+	  const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+  
+	  if (!isPasswordCorrect) {
+		return res.status(400).json({ error: "Old password is incorrect" });
+	  }
+  
+	  // Tạo hash cho mật khẩu mới
+	  const salt = await bcrypt.genSalt(10);
+	  const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+  
+	  // Cập nhật mật khẩu mới cho user
+	  user.password = hashedNewPassword;
+	  await user.save();
+  
+	  res.status(200).json({ message: "Password changed successfully" });
+	} catch (error) {
+	  console.log("Error in changePassword controller", error.message);
+	  res.status(500).json({ error: "Internal Server Error" });
+	}
+  };

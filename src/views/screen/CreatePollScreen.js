@@ -16,10 +16,11 @@ import {
   Row,
   Col,
   CardFooter,
-  Modal,
+  // Modal,
   InputGroup,
 
 } from "reactstrap";
+import { Modal, Button as ButtonAnt } from "antd";
 
 // core components
 import ExamplesNavbar from "components/Navbars/ExamplesNavbar.js";
@@ -35,10 +36,6 @@ import { getDatabase, ref as dbRef, set, onValue } from "firebase/database";
 import Candidates from "components/CreatePoll/Candidates";
 
 import { useNavigate } from 'react-router-dom';
-
-
-
-
 let ps = null;
 
 export default function CreatePollScreen() {
@@ -49,98 +46,60 @@ export default function CreatePollScreen() {
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [file, setFile] = useState(null);
-  const [idVoting, setIdVoting] = useState('');
-  const [formModal, setFormModal] = React.useState(false);
   const navigate = useNavigate();
   const [isPrivate, setIsPrivate] = useState(true);
   const [password, setPassword] = useState("");
+  const [useImgAddress, setUseImgAddress] = useState(false);
+  const [imgAddress, setImgAddress] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState('');
 
+  const [open, setOpen] = useState(false);
+  const showModal = () => {
+    setOpen(true);
+  };
+  const handleOk = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setOpen(false);
+    }, 3000);
+  };
+  const handleCancel = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
-
-    console.log("Auth user: ", authUser);
-    if (idVoting) {
-      try {
-        // const dataRef = dbRef(database, '/candidates/' + idVoting);
-        // onValue(dataRef, (snapshot) => {
-        //   const data = snapshot.val();
-        //   console.log(data);
-        // });
-      } catch (e) {
-        console.error(e)
-      }
+    // Cập nhật 'uploaded-image' khi 'imgAddress' thay đổi
+    const uploadedImage = document.getElementById('image-address');
+    if (uploadedImage) {
+      uploadedImage.src = imgAddress;
     }
+  }, [imgAddress]);
 
-  }, []);
+  const handleInputChange = (event) => {
+    setImgAddress(event.target.value);
+  };
 
-  function generateRandomId() {
-    return Date.now(); // Sử dụng thời gian hiện tại làm ID, có thể không đảm bảo tính duy nhất trong một số trường hợp.
-  }
-
-  // hàm tạo voting với firebase
-  const handleCreatePoll1 = async () => {
-
-    try {
-      let imageUrl = ""
-      if (file) {
-        // Upload image to Firebase Storage
-        const storageRef = ref(storage, `images/${file.name}`);
-        await uploadBytesResumable(storageRef, file);
-        // Get download URL of the uploaded image
-        imageUrl = await getDownloadURL(storageRef);
-        console.log("Downloading image", imageUrl);
-      }
-
-      const id = generateRandomId();
-      setIdVoting(id);
-      // Save data to Realtime Database
-      const pollData = {
-        id: id,
-        title: title,
-        description: description,
-        imgUrl: imageUrl,
-        startAt: startAt,
-        endAt: endAt,
-        owner: userData.userId,
-        createAt: Date.now(),
-        // options: null,
-        // Add other data fields here
-      };
-
-      // const db = getDatabase();
-      // // const newPollRef = dbRef(db, 'polls').push();
-      // await set(newPollRef, pollData);
-
-      set(dbRef(database, 'polls/' + id), pollData)
-        .then(() => {
-          console.log("Đã ghi thông tin cuộc bình chọn");
-        })
-        .catch((error) => {
-          console.error("Lỗi khi ghi thông tin cuộc bình chọn ", error);
-        });
-      navigate(`/addCandidate?votingId=${id}&title=${title}`);
-    } catch (e) {
-      console.error(e);
-    }
-
-  }
 
   //hàm tạo voting với mongodb
   const handleCreatePoll = async () => {
 
     try {
       let imageUrl = "url"
-      if (file) {
-        // Upload image to Firebase Storage
-        const storageRef = ref(storage, `images/${file.name}`);
-        await uploadBytesResumable(storageRef, file);
-        // Get download URL of the uploaded image
-        imageUrl = await getDownloadURL(storageRef);
-        console.log("Downloading image", imageUrl);
+      if (useImgAddress) {
+        imageUrl = imgAddress;
+      } else {
+        if (file) {
+          // Upload image to Firebase Storage
+          const storageRef = ref(storage, `images/${file.name}`);
+          await uploadBytesResumable(storageRef, file);
+          // Get download URL of the uploaded image
+          imageUrl = await getDownloadURL(storageRef);
+          console.log("Downloading image", imageUrl);
+        }
       }
-
       try {
-
         const userVoting = JSON.parse(localStorage.getItem("user-voting"));
         console.log("User voting: ", userVoting._id);
         const res = await fetch(`http://localhost:5500/api/votings/create`, {
@@ -180,6 +139,7 @@ export default function CreatePollScreen() {
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     setFile(file);
+    console.log("File:", file)
     const reader = new FileReader();
     reader.onloadend = () => {
       // Set the uploaded image to the img element
@@ -214,6 +174,44 @@ export default function CreatePollScreen() {
     };
 
   }, []);
+
+  const handleGenerateImage = async () => {
+    console.log("Generating image")
+    try {
+      const response = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sk-proj-sVTv98za1WFc5pdjJAdtT3BlbkFJTXFfDopuNWcmItU5fDvJ"
+        },
+        body: JSON.stringify({
+          model: "dall-e-2",
+          prompt: prompt,
+          n: 1,
+          size: "1024x1024"
+        })
+      });
+
+      const data = await response.json();
+      if (data) {
+        const imgUrl = data.data[0].url;
+        console.log(data.data[0].url);
+        setImgAddress(data.data[0].url);
+        const uploadedImage = document.getElementById('uploaded-image');
+        if (uploadedImage) {
+          uploadedImage.src = imgUrl;
+        }
+        const uploadedImage2 = document.getElementById('image-address');
+        if (uploadedImage2) {
+          uploadedImage2.src = imgUrl;
+        }
+      }
+
+    } catch (error) {
+      console.error(error);
+    }
+    setOpen(false)
+  };
   return (
     <>
       <IndexNavbar />
@@ -221,6 +219,7 @@ export default function CreatePollScreen() {
         <section className="section">
           <Container>
             <Row>
+              {/* cột infomation */}
               <Col md="6">
                 <Card className="card-plain">
                   <CardHeader>
@@ -271,7 +270,7 @@ export default function CreatePollScreen() {
                             <Label check>
                               <Input defaultChecked type="checkbox" onChange={(e) => setIsPrivate(e.target.checked)} />
                               <span className="form-check-sign" />
-                              Private? 
+                              Private?
                             </Label>
                           </FormGroup>
                         </Col>
@@ -300,45 +299,77 @@ export default function CreatePollScreen() {
                   </CardBody>
                 </Card>
               </Col>
-
+              {/* cột image */}
               <Col className="ml-auto" md="6">
                 <Card className="center card-coin card-plain"
                   style={{ marginTop: '210px', fontSize: '150%' }}
                 >
                   <CardHeader>
-                    {/* <img
-                      alt="..."
-                      className="img-center img-fluid"
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/440px-Sunflower_sky_backdrop.jpg"
-                      style={{ width: '300px', height: '200px', objectFit: 'cover' }}
-                    /> */}
-                    <img
-                      id="uploaded-image"
-                      alt="Uploaded Image"
-                      className="img-center img-fluid"
-                      style={{ width: '500px', height: '300px', objectFit: 'cover' }}
-                      src="https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"
-                    />
+                    {!useImgAddress ? (
+                      <img
+                        id="uploaded-image"
+                        alt="Uploaded Image"
+                        className="img-center img-fluid"
+                        style={{ width: '500px', height: '300px', objectFit: 'cover' }}
+                        src="https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"
+                      />
+                    ) : (
+                      <img
+                        id="image-address"
+                        alt="Uploaded Image"
+                        className="img-center img-fluid"
+                        style={{ width: '500px', height: '300px', objectFit: 'cover' }}
+                        src={imgAddress || "https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"}
+                      />
+                    )}
                   </CardHeader>
-                  {/* <CardBody>
-                    <Row>
-                      <Col className="text-center" md="12">
-                        <h4 className="text-uppercase">Image</h4>
-                        <span>Plan</span>
-                        <hr className="line-info" />
-                      </Col>
-                    </Row>
+                  {!useImgAddress ? (
+                    <CardFooter className="text-center">
+                      <label htmlFor="file-upload" className="custom-file-upload btn-simple">
+                        Upload Image
+                      </label>
+                      <input id="file-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                    </CardFooter>
+                  ) : (
+                    <CardFooter className="text-center">
+                      <InputGroup>
+                        <Input
+                          id='img-address'
+                          placeholder="Image Address"
+                          type="text"
+                          value={imgAddress}
+                          onChange={handleInputChange}
+                        />
+                      </InputGroup>
+                    </CardFooter>
 
-                  </CardBody> */}
-                  <hr className="line-info" />
-                  <CardFooter className="text-center">
+                  )}
 
-                    <label htmlFor="file-upload" className="custom-file-upload btn-simple" >
-                      Upload Image
-                    </label>
-                    <input id="file-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                  </CardFooter>
+
+                  <a
+                    style={{
+                      color: '#5b8bfb',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      textAlign: 'center',
+                      display: 'block',
+                      marginBottom: '10px',
+                    }}
+                    onClick={() => setUseImgAddress(!useImgAddress)}
+                  > {!useImgAddress ? "Use a image URL ?" : "Upload a image"}</a>
+
                 </Card>
+                <Button
+                  className="btn-round float-left"
+                  color="default"
+                  data-placement="right"
+                  // id="tooltip341148792"
+                  type="button"
+                  // onClick={() => handleCreatePoll()}
+                  onClick={showModal}
+                >
+                  AI Generate Image
+                </Button>
                 <Button
                   className="btn-round float-right"
                   color="primary"
@@ -347,38 +378,36 @@ export default function CreatePollScreen() {
                   type="button"
                   onClick={() => handleCreatePoll()}
                 >
-                  Next step
+                  Add Candidates
                 </Button>
               </Col>
 
             </Row>
-
-            <Card className="card-plain">
-              <CardHeader>
-                <Row>
-                  <div>
-                    <h1 className="profile-title text-left">Candidates</h1>
-                    <h5 className="text-on-back">2</h5>
-                  </div>
-                  <Button
-                    className="btn-simple btn-round"
-                    color="primary"
-                    type="button"
-                    style={{ height: '50px', marginTop: '50px', marginLeft: '10px' }}
-                    onClick={() => setFormModal(true)}
-                  >
-                    Add
-                  </Button>
-                </Row>
-
-              </CardHeader>
-            </Card>
-
-
           </Container>
         </section>
         {/* <Footer /> */}
-
+        <Modal
+          open={open}
+          title="Enter prompt you want to generate image"
+          onOk={handleOk}
+          onCancel={handleCancel}
+          footer={[
+            <ButtonAnt key="back" onClick={handleCancel}>
+              Cancel
+            </ButtonAnt>,
+            <ButtonAnt key="submit" type="primary" loading={loading} onClick={() => { handleGenerateImage() }}>
+              Submit
+            </ButtonAnt>,
+          ]}
+        >
+          <Input
+            placeholder="Prompt"
+            onChange={(e) => setPrompt(e.target.value)}
+            style={{
+              color: 'black'
+            }}
+          />
+        </Modal>
       </div>
     </>
   );

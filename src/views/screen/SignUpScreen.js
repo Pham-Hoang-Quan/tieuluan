@@ -83,6 +83,7 @@ export default function SignUpScreen({ account }) {
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const [userId, setUserId] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const timestamp = serverTimestamp(); // Lấy thời gian hiện tại từ máy chủ Firebase
 
     const navigate = useNavigate();
@@ -139,7 +140,7 @@ export default function SignUpScreen({ account }) {
                         console.log("User data written successfully to database");
                         // Sau khi ghi thành công vào cơ sở dữ liệu, chuyển hướng người dùng đến trang chủ
                         // window.location.href = "/";
-                        
+
                     })
                     .catch((error) => {
                         console.error("Error writing user data to database: ", error);
@@ -176,7 +177,7 @@ export default function SignUpScreen({ account }) {
             navigate('/');
         }
     }
-    
+
     const signer = new ethers.providers.Web3Provider(
         window.ethereum,
     ).getSigner();
@@ -267,11 +268,21 @@ export default function SignUpScreen({ account }) {
                                                     </InputGroupAddon>
                                                     <Input
                                                         placeholder="Password"
-                                                        type="text"
+                                                        type={showPassword ? "text" : "password"}
                                                         onFocus={(e) => setPasswordFocus(true)}
                                                         onBlur={(e) => setPasswordFocus(false)}
                                                         onChange={(e) => setPassword(e.target.value)}
                                                     />
+                                                    {/* <Button onClick={() => setShowPassword(!showPassword)}> */}
+                                                    {/* {showPassword ? 'Hide' : 'Show'} password */}
+                                                    <i
+                                                        className={showPassword ? "fa fa-eye-slash" : "fa fa-eye"}
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        style={{
+                                                            margin: 'auto 10px auto 10px',
+                                                        }}
+                                                    ></i>
+                                                    {/* </Button> */}
                                                 </InputGroup>
                                                 <FormGroup check className="text-left">
                                                     <Label check>

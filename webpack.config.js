@@ -2,7 +2,7 @@ export const resolve = {
     fallback: {
         "util": require.resolve("util/"),
         "http": require.resolve("stream-http"),
-        "https": "./node_modules/https-browserify",
-        "zlib": "./node_modules/browserify-zlib"
+        "https": require.resolve("https-browserify"),
+        "zlib": require.resolve("browserify-zlib")
     }
 };

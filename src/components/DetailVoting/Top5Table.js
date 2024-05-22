@@ -25,7 +25,7 @@ const Top5Table = ({ topFiveCandidates, handleUpdateVoteTransOnBC, userIsVoted, 
                                     {candidate.countVote}
                                 </Button>{' '}
                             </td>
-                            <td className="text-center">
+                            {/* <td className="text-center">
                                 {
                                     userIsVoted ? (
                                         canIdOld == candidate.id ? (
@@ -43,15 +43,7 @@ const Top5Table = ({ topFiveCandidates, handleUpdateVoteTransOnBC, userIsVoted, 
                                         </Button>
                                     )
                                 }
-                                {/* {
-                                    userIsVoted ? <Button color="info" size="sm" onClick={() => { handleUpdateVoteTransOnBC(candidate.id) }}>
-                                        Re-vote
-                                    </Button> : <Button color="info" size="sm" onClick={() => { handleAddVoteTransOnBC(candidate.id) }}>
-                                        Vote
-                                    </Button>
-                                } */}
-
-                            </td>
+                            </td> */}
                         </tr>
                     ))}
                 </tbody>

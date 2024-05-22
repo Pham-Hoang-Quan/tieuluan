@@ -38,6 +38,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { AppContext } from "context/AppContext";
 import { useContext } from "react";
+import { Button as ButtonAnt, Divider, notification, Space } from 'antd';
+
 
 export default function SignInScreen({ account }) {
     const [squares1to6, setSquares1to6] = React.useState("");
@@ -45,7 +47,7 @@ export default function SignInScreen({ account }) {
     const [fullNameFocus, setFullNameFocus] = React.useState(false);
     const [emailFocus, setEmailFocus] = React.useState(false);
     const [passwordFocus, setPasswordFocus] = React.useState(false);
-
+    const [showPassword, setShowPassword] = React.useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
@@ -53,6 +55,15 @@ export default function SignInScreen({ account }) {
     const timestamp = serverTimestamp(); // Lấy thời gian hiện tại từ máy chủ Firebase
     const navigate = useNavigate();
 
+    const [api, contextHolder] = notification.useNotification();
+    const openNotification = (placement) => {
+        api.info({
+            message: `Notification ${placement}`,
+            description:
+                'Your account is blocked from accessing the system. Please contact the administrator for more information.',
+            placement,
+        });
+    };
 
     React.useEffect(() => {
         document.body.classList.toggle("register-page");
@@ -83,55 +94,68 @@ export default function SignInScreen({ account }) {
     };
 
     // hàm đăng nhập với Fisebase Auth
-    function signIn() {
+    const signIn = async () => {
         try {
+            // đăng nhập bằng firebase auth
             signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     // Đăng nhập thành công
                     const user = userCredential.user;
                     console.log("user logon", user);
                     console.log("user logon", user.uid);
-
-                    navigate('/');
-                    // window.location.href = '/'
-
+                    signInWithMongodb();
+                }) // bắt lỗi
+                .catch((error) => {
+                    const errorMessage = error.message;
+                    console.log("error", error);
+                    alert(errorMessage);
+                    return;
                 })
         } catch (e) {
             console.error(e);
+        } finally {
         }
+
     }
 
-    const {setAuthUser} = useContext(AppContext);
+    const { setAuthUser } = useContext(AppContext);
 
-    // const signIn = async () => {
-		
-	// 	try {
-	// 		const res = await fetch("/api/auth/login", {
-	// 			method: "POST",
-	// 			headers: { "Content-Type": "application/json" },
-	// 			body: JSON.stringify({ email, password }),
-    //             credentials: 'include'
-	// 		});
+    const signInWithMongodb = async () => {
+        console.log("sign in", email, password)
+        try {
+            const payload = { email, password };
+            console.log("Sending payload:", payload);
 
-	// 		const data = await res.json();
-	// 		if (data.error) {
-	// 			throw new Error(data.error);
-	// 		}
+            const res = await fetch(`http://localhost:5500/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
 
-	// 		localStorage.setItem("user-voting", JSON.stringify(data.user));
-	// 		setAuthUser(data.user);
-    //         navigate('/');
-	// 	} catch (error) {
-	// 		// toast.error(error.message);
-	// 	} finally {
-	// 		// setLoading(false);
-	// 	}
-	// };
+            const data = await res.json();
+            if (data.user.userId == "0") {
+                openNotification(data.name)
+                return
+            }
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            localStorage.setItem("user-voting", JSON.stringify(data.user));
+            setAuthUser(data.user);
+            navigate('/');
+        } catch (error) {
+            // toast.error(error.message);
+        } finally {
+            // setLoading(false);
+        }
+    };
 
 
     return (
         <>
             <ExamplesNavbar />
+            {contextHolder}
             <div className="wrapper">
                 <div className="page-header">
                     <div className="page-header-image" />
@@ -180,11 +204,18 @@ export default function SignInScreen({ account }) {
                                                     </InputGroupAddon>
                                                     <Input
                                                         placeholder="Password"
-                                                        type="text"
+                                                        type={showPassword ? "text" : "password"}
                                                         onFocus={(e) => setPasswordFocus(true)}
                                                         onBlur={(e) => setPasswordFocus(false)}
                                                         onChange={(e) => setPassword(e.target.value)}
                                                     />
+                                                    <i
+                                                        className={showPassword ? "fa fa-eye-slash" : "fa fa-eye"}
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        style={{
+                                                            margin: 'auto 10px auto 10px',
+                                                        }}
+                                                    ></i>
                                                 </InputGroup>
 
                                                 <Label>

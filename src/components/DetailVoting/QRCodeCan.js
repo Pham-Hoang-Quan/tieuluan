@@ -10,7 +10,6 @@ const QRCodeCan = ({ userId, votingId }) => {
 
     const [updateVoteList, setUpdateVoteList] = React.useState([]);
     const [candidateNames, setCandidateNames] = React.useState([]);
-
     React.useEffect(() => {
         const signer = new ethers.providers.Web3Provider(
             window.ethereum,
@@ -105,6 +104,9 @@ const QRCodeCan = ({ userId, votingId }) => {
     const getInfo = () => {
         let info = "";
         let countVoteList = 1;
+        if (candidateNames.length == 0) {
+            return "You have never voted before !"
+        }
         candidateNames.map((name) => {
             info += "Lần " + countVoteList + ": " + name + " \n";
             countVoteList++;
@@ -114,7 +116,6 @@ const QRCodeCan = ({ userId, votingId }) => {
     };
 
     return (
-        // JSX code for rendering the component goes here
         <div>
             <Card className="card-coin card-plain"
                 style={{ marginTop: "20px", marginBottom: "20px", marginLeft: "20px", marginRight: "20px" }}
@@ -143,14 +144,7 @@ const QRCodeCan = ({ userId, votingId }) => {
                     </Col>
                 </CardBody>
             </Card>
-            <Button
-                className="mt-4"
-                color="warning"
-                href="#candidates"
-            // style={{ position: "relative", top: "20%", left: "45%", transform: "translateX(-50%)" }}
-            >
-                Go to vote
-            </Button>
+            
         </div>
     );
 };

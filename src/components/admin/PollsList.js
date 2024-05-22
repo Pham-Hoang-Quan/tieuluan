@@ -20,9 +20,8 @@ import { useMaterialUIController } from "context";
 import { useEffect, useState } from "react";
 import { getDatabase, ref, get } from "firebase/database";
 import MDAvatar from "components/MDAvatar";
-import team2 from "assets/images/team-2.jpg";
-import team3 from "assets/images/team-3.jpg";
-import team4 from "assets/images/team-4.jpg";
+
+import moment from "moment";
 
 const Author = ({ image, name, email }) => (
     <MDBox display="flex" alignItems="center" lineHeight={1}>
@@ -77,48 +76,26 @@ function PollsList() {
                 { Header: "Name", accessor: "name" },
                 { Header: "ID", accessor: "id" },
                 { Header: "Created ", accessor: "createAt" },
+                { Header: "End ", accessor: "endAt" },
                 { Header: "Action", accessor: "action" },
-                // { Header: "Address", accessor: "address" },
-                // { Header: "Email", accessor: "email" },
-                // { Header: "Avatar URL", accessor: "avtUrl" },
-                // Add more columns as needed
             ];
-
-            // rows: [
-            //     {
-            //       author: <Author image={team2} name="John Michael" email="john@creative-tim.com" />,
-            //       function: <Job title="Manager" description="Organization" />,
-            //       status: (
-            //         <MDBox ml={-1}>
-            //           <MDBadge badgeContent="online" color="success" variant="gradient" size="sm" />
-            //         </MDBox>
-            //       ),
-            //       employed: (
-            //         <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
-            //           23/04/18
-            //         </MDTypography>
-            //       ),
-            //       action: (
-            //         <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
-            //           Edit
-            //         </MDTypography>
-            //       ),
-            //     },
-            //     {
 
             const rows = Object.keys(polls || {})
                 .map((id) => {
                     const poll = polls[id];
+                    console.log(poll)
                     if (poll) {
                         return {
                             no: Object.keys(polls || {}).indexOf(id) + 1,
-                            id,
-                            name: <Author image={poll.imgUrl} name={poll.title} email={ "Owner: " + poll.owner} />,
+                            id: poll._id,
+                            name: <Author image={poll.imgUrl} name={poll.title} email={"Owner: " + (poll.owner ? poll.owner.name : 'N/A')} />,
                             email: poll.email,
                             address: poll.address,
-                            // avtUrl: user.avtUrl,
                             createAt: <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
-                                {new Date(poll.createAt).toLocaleDateString()}
+                                {moment(poll.createdAt).format("MMM Do YY")}
+                            </MDTypography>,
+                            endAt: <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
+                                {moment(poll.endAt).format("MMM Do YY")}
                             </MDTypography>,
                             action: <MDTypography component="a" href="#" variant="caption" color="info" fontWeight="medium">
                                 Detail

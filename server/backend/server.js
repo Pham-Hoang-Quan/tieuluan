@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.routes.js";
 import conversationRoutes from "./routes/conversation.routes.js"
 import votingRoutes from "./routes/voting.routes.js";
 import candidateRouters from "./routes/candidate.routes.js";
+import participantRoutes from "./routes/participant.routes.js";
 
 import connectToMongoDB from "./db/connectToMongoDB.js";
 import { app, server } from "./socket/socket.js";
@@ -32,6 +33,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/votings", votingRoutes);
 app.use("/api/candidates", candidateRouters);
+app.use("/api/participants", participantRoutes);
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 

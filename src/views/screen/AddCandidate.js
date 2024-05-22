@@ -38,14 +38,16 @@ import { id } from "ethers/lib/utils";
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 
-
+import * as XLSX from 'xlsx';
+import { Button as AntdButton, message, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 
 
 let ps = null;
 
 export default function AddCandidate() {
 
-    const {userData} = useContext(AppContext);
+    const { userData } = useContext(AppContext);
     const [formModal, setFormModal] = React.useState(false);
 
     const [name, setName] = useState("");
@@ -58,6 +60,22 @@ export default function AddCandidate() {
     const idVoting = searchParams.get('votingId');
     const title = searchParams.get('title');
     const navigate = useNavigate();
+
+    const [useImgAddress, setUseImgAddress] = useState(false);
+    const [imgAddress, setImgAddress] = useState('');
+
+    useEffect(() => {
+        // Cập nhật 'uploaded-image' khi 'imgAddress' thay đổi
+        const uploadedImage = document.getElementById('image-address');
+        if (uploadedImage) {
+            uploadedImage.src = imgAddress;
+        }
+    }, [imgAddress]);
+
+    const handleInputChange = (event) => {
+        setImgAddress(event.target.value);
+    };
+
     React.useEffect(() => {
         if (navigator.platform.indexOf("Win") > -1) {
             document.documentElement.className += " perfect-scrollbar-on";
@@ -104,63 +122,69 @@ export default function AddCandidate() {
         return Date.now(); // Sử dụng thời gian hiện tại làm ID, có thể không đảm bảo tính duy nhất trong một số trường hợp.
     }
     const handleAddCandidate = async () => {
-
         try {
             let imageUrl = "img"
-            if (file) {
-                // Upload image to Firebase Storage
-                const storageRef = ref(storage, `candidatesImg/${file.name}`);
-                await uploadBytesResumable(storageRef, file);
-                // Get download URL of the uploaded image
-                imageUrl = await getDownloadURL(storageRef);
-                console.log("Downloading image", imageUrl);
+            if (useImgAddress) {
+                imageUrl = imgAddress;
+            } else {
+                if (file) {
+                    // Upload image to Firebase Storage
+                    const storageRef = ref(storage, `candidatesImg/${file.name}`);
+                    await uploadBytesResumable(storageRef, file);
+                    // Get download URL of the uploaded image
+                    imageUrl = await getDownloadURL(storageRef);
+                    console.log("Downloading image", imageUrl);
+                }
             }
-
             const id = generateRandomId();
             setIdCan(id);
-            // Save data to Realtime Database
-            // const canData = {
-            //     id: id,
-            //     name: name,
-            //     description: description,
-            //     imgUrl: imageUrl,
-            //     idVoting: idVoting,
-            //     countVote: 0,
-            //     // options: null,
-            //     // Add other data fields here
-            // };
-            // set(dbRef(database, 'candidates/' + id), canData)
-            //     .then(() => {
-            //         console.log("Đã ghi thông tin cuộc bình chọn");
-            //     })
-            //     .catch((error) => {
-            //         console.error("Lỗi khi ghi thông tin cuộc bình chọn ", error);
-            //     });
+            const res = await fetch(`http://localhost:5500/api/candidates/add/${idVoting}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    imgUrl: imageUrl,
+                    name,
+                    description,
+                }),
+            });
 
-            // thêm vào mongodb
-        const res = await fetch(`http://localhost:5500/api/candidates/add/${idVoting}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                imgUrl: imageUrl,
-                name,
-                description,
-            }),
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            console.log(data);
-            // history.push('/');
-            
-        }
-
+            if (res.ok) {
+                const data = await res.json();
+                console.log(data);
+                // history.push('/');
+            }
             loadCandidates()
-
+            setUseImgAddress(false);
+            setImgAddress('')
         } catch (e) {
             console.error(e);
         }
         setFormModal(false);
+        loadCandidates()
+    }
+
+    const handleAddCandidateFormFile = async (imgUrl, name, description) => {
+        try {
+            const res = await fetch(`http://localhost:5500/api/candidates/add/${idVoting}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    imgUrl: imgUrl,
+                    name,
+                    description,
+                }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                console.log(data);
+                // history.push('/');
+                console.log(name);
+            }
+            loadCandidates()
+        } catch (e) {
+            console.error(e);
+        }
         loadCandidates()
     }
     const loadCandidates = async () => {
@@ -221,6 +245,33 @@ export default function AddCandidate() {
         ); // hoặc thông báo lỗi
     }
 
+    const handleFileUpload = (file) => {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const bstr = evt.target.result;
+            const wb = XLSX.read(bstr, { type: 'binary' });
+            const wsname = wb.SheetNames[0];
+            const ws = wb.Sheets[wsname];
+            const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            data.forEach((row) => {
+                const image = row[0];
+                const name = row[1];
+                const description = row[2];
+                console.log(image, name, description)
+                handleAddCandidateFormFile(image, name, description);
+            });
+        };
+        reader.readAsBinaryString(file);
+    };
+    
+    // Cấu hình props cho component Upload
+    const uploadProps = {
+        beforeUpload: (file) => {
+            handleFileUpload(file); // Gọi hàm handleFileUpload khi chọn file
+            return false; // Ngăn chặn tải lên tự động
+        },
+        showUploadList: false, // Ẩn danh sách tải lên
+    };
     return (
         <>
             <IndexNavbar />
@@ -229,15 +280,17 @@ export default function AddCandidate() {
                     <Container>
                         <Card className="card-plain">
                             <CardHeader>
-                                <Row style={{marginBottom: "-50px"}}>
+                                <Row style={{ marginBottom: "-50px" }}>
+                                    {/* Cột chữ */}
                                     <Col>
                                         <div>
                                             <h1 className="profile-title text-left">Candidates</h1>
-                                            <h5 className="text-on-back">2</h5>
+                                            <h5 className="text-on-back">{candidates.length}</h5>
                                         </div>
-                                    </Col>
 
-                                    <Col style={{display: "flex", justifyContent: 'flex-end'}}>
+                                    </Col>
+                                    {/* Cột nút */}
+                                    <Col style={{ display: "flex", justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                                         <Button
                                             className="btn-simple btn-round"
                                             color="primary"
@@ -256,6 +309,13 @@ export default function AddCandidate() {
                                         >
                                             Finish
                                         </Button>
+                                        <Upload {...uploadProps} style={{ height: '50px', marginTop: '50px', marginLeft: '10px' }}>
+                                            <Button style={{ height: '50px', marginTop: '50px', marginLeft: '10px' }} className="btn-round" color="neutral" type="button">
+                                                <i className="fa fa-upload" />
+                                                {"  "}Import Excel
+                                            </Button>
+                                        </Upload>
+                                        {/* <input type="file" onChange={handleFileUpload} /> */}
                                     </Col>
                                 </Row>
 
@@ -343,27 +403,57 @@ export default function AddCandidate() {
                     </div>
                     <div className="modal-body">
                         <Row style={{ display: "flex", justifyContent: "center" }}>
-                            <Col className="mt-sm-0" sm="12" xs="12"
-                                style={{ display: "flex", justifyContent: "center" }}
-                            >
-                                {/* <small className="d-block text-uppercase font-weight-bold mb-4">
-                                    Image
-                                </small> */}
-                                <img
-                                    id="uploaded-image"
-                                    alt="..."
-                                    className="img-fluid rounded-circle shadow-lg"
-                                    src="https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"
-                                    style={{ width: "180px", height: "180px", objectFit: 'cover' }}
-                                />
-                                <label
-                                    className="edit-button"
-                                    htmlFor="file-upload"
+
+                            {!useImgAddress ? (
+                                <Col className="mt-sm-0" sm="12" xs="12"
+                                    style={{ display: "flex", justifyContent: "center" }}
                                 >
-                                    <i className="far fa-edit" />{/* Sử dụng biểu tượng edit từ react-icons */}
-                                    <input id="file-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                                </label>
-                            </Col>
+
+                                    <img
+                                        id="uploaded-image"
+                                        alt="..."
+                                        className="img-fluid rounded-circle shadow-lg"
+                                        src="https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"
+                                        style={{ width: "180px", height: "180px", objectFit: 'cover' }}
+                                    />
+                                    <label
+                                        className="edit-button"
+                                        htmlFor="file-upload"
+                                    >
+                                        <i className="far fa-edit" />{/* Sử dụng biểu tượng edit từ react-icons */}
+                                        <input id="file-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                                    </label>
+
+                                </Col>
+                            ) : (
+                                <Col className="mt-sm-0" sm="12" xs="12"
+                                    style={{ display: "flex", justifyContent: "center" }}
+                                >
+
+                                    <img
+                                        id="image-address"
+                                        alt="..."
+                                        className="img-fluid rounded-circle shadow-lg"
+                                        src={imgAddress || "https://cannamazoo.com/assets/defaults/img/default-product-img.jpg"}
+                                        style={{ width: "180px", height: "180px", objectFit: 'cover' }}
+                                    />
+
+                                </Col>
+                            )}
+
+
+                            <a
+                                style={{
+                                    color: '#5b8bfb',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    textAlign: 'center',
+                                    display: 'block',
+                                    marginBottom: '10px',
+                                }}
+                                onClick={() => setUseImgAddress(!useImgAddress)}
+                            > {!useImgAddress ? "Use a image URL ?" : "Upload a image"}</a>
+
                         </Row>
                         <Row>
                             <Col md="12">
@@ -374,6 +464,16 @@ export default function AddCandidate() {
                                     </CardHeader>
                                     <CardBody>
                                         <Form>
+                                            {useImgAddress &&
+                                                <Row>
+                                                    <Col md="12">
+                                                        <FormGroup>
+                                                            <label>Image address</label>
+                                                            <Input value={imgAddress} placeholder="Option" type="text" onChange={handleInputChange} />
+                                                        </FormGroup>
+                                                    </Col>
+                                                </Row>
+                                            }
                                             <Row>
                                                 <Col md="12">
                                                     <FormGroup>

@@ -10,7 +10,7 @@ export const getVotingInfo = async (req, res) => {
 
         let votingInfo = await Voting.findOne({
             _id: votingId,
-        }).populate('candidates'); // giả định 'candidates' là trường chứa thông tin về các ứng cử viên
+        }).populate('candidates').populate('owner'); // giả định 'candidates' là trường chứa thông tin về các ứng cử viên, 'owner' là trường chứa thông tin về chủ sở hữu
 
         if (!votingInfo) {
             return res.status(404).json({ error: "Voting not found" });
@@ -98,7 +98,7 @@ export const checkPassword = async (req, res) => {
 // hàm lấy tất cả các votings
 export const getVotings = async (req, res) => {
     try {
-        let votings = await Voting.find();
+        let votings = await Voting.find().populate('owner');
 
         res.status(200).json(votings);
     } catch (error) {
@@ -127,6 +127,56 @@ export const getPublicVotings = async (req, res) => {
         res.status(200).json(votings);
     } catch (error) {
         console.log("Error in getPublicVotings controller: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
+// hàm cập nhật thông tin của một voting truyền vào id từ param 
+// và body gồm có title, description, imgUrl, startAt, endAt
+export const updateVoting = async (req, res) => {
+    try {
+        // id của voting truyền vào params updateVoting/:id
+        const { id: votingId } = req.params;
+
+        // Lấy dữ liệu từ body
+        const { title, description, imgUrl, startAt, endAt} = req.body;
+
+        // Tìm và cập nhật thông tin của voting
+        const updatedVoting = await Voting.findByIdAndUpdate(
+            votingId,
+            {
+                title,
+                description,
+                imgUrl,
+                startAt,
+                endAt,
+            },
+            { new: true, runValidators: true } // Trả về document đã cập nhật
+        );
+
+        if (!updatedVoting) {
+            return res.status(404).json({ error: "Voting not found" });
+        }
+
+        res.status(200).json(updatedVoting);
+    } catch (error) {
+        console.log("Error in updateVoting controller: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+// hàm lấy các voting bằng owner truyền vào từ param
+export const getVotingsByOwner = async (req, res) => {
+    try {
+        // id của owner truyền vào params getVotingsByOwner/:owner
+        const { owner } = req.params;
+
+        let votings = await Voting.find({ owner });
+
+        res.status(200).json(votings);
+    } catch (error) {
+        console.log("Error in getVotingsByOwner controller: ", error.message);
         res.status(500).json({ error: "Internal server error" });
     }
 };

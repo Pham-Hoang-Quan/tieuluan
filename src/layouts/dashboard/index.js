@@ -38,6 +38,11 @@ import Header from "layouts/profile/components/Header";
 import MDTypography from "components/MDTypography";
 import { getDatabase, ref, get } from "firebase/database";
 
+import { EditOutlined, EllipsisOutlined, SettingOutlined } from '@ant-design/icons';
+import { Avatar, Card } from 'antd';
+import { Link } from "react-router-dom";
+const { Meta } = Card;
+
 function Dashboard() {
   const { sales, tasks } = reportsLineChartData;
 
@@ -148,19 +153,6 @@ function Dashboard() {
 
 
         </Grid>
-
-        {/* <MDBox>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={8}>
-              <Projects />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <OrdersOverview />
-            </Grid>
-          </Grid>
-        </MDBox> */}
-
-
       </MDBox>
       <Grid item xs={12} lg={12} style={{ backgroundColor: 'white', borderRadius: '16px' }}>
         <MDBox pt={2} px={2} lineHeight={1.25}>
@@ -169,33 +161,51 @@ function Dashboard() {
           </MDTypography>
         </MDBox>
         <MDBox p={2}>
-          <Grid container spacing={6}>
-            {recentPolls.map((poll) => (
-              <Grid item xs={12} md={6} xl={3} key={poll._id}>
-                <DefaultProjectCard
-                  image={poll.imgUrl}
-                  // label={`ID #${poll._id}`}
-                  title={poll.title} // Replace with the actual title property
-                  description={poll.description.slice(0, 70) + ' ...'}
-                  action={{
-                    type: "internal",
-                    route: `/votingDetail?votingId=${poll.id}`, // Replace with the actual route
-                    color: "info",
-                    label: "view voting",
+          <div>
+
+          </div>
+          <Grid style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '10px',
+          }} container spacing={6}>
+            {recentPolls.map((voting) => (
+              <>
+                <Card
+                  style={{
+                    width: 300,
+                    margin: '30px',
+                    boxShadow: '10px 10px 10px rgba(0, 0, 0, 0.3)',
+
                   }}
-                />
-              </Grid>
+                  cover={
+                    <img
+                      alt="example"
+                      src={voting.imgUrl}
+                      style={{ width: 300, height: 200, objectFit: 'cover' }}
+                    />}
+                  actions={[
+                    <Link to={`/votingDetail/${voting._id}`}>
+                      <SettingOutlined key="setting" />
+                    </Link>,
+                    <Link to={`/votingDetail/${voting._id}`}>
+                      <EditOutlined key="edit" />
+                    </Link>,
+
+                  ]}
+                >
+                  <Meta
+                    avatar={<Avatar src={(voting.owner ? voting.owner.avtUrl : 'https://png.pngtree.com/png-clipart/20210829/original/pngtree-universal-user-account-role-account-my-icon-icon-png-image_6679911.jpg')} />}
+                    title={voting.title}
+                    description={voting.description.slice(0, 91) + "..."}
+                  />
+                </Card>
+              </>
             ))}
 
           </Grid>
         </MDBox>
       </Grid>
-
-
-
-
-
-
     </DashboardLayout>
   );
 }

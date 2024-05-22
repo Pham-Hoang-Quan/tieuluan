@@ -45,7 +45,6 @@ import Notifications from "layouts/notifications";
 import Overview from "layouts/profile";
 
 
-
 export default function AdminDashboard() {
   const [controller, dispatch] = useMaterialUIController();
   const {
@@ -159,12 +158,13 @@ export default function AdminDashboard() {
       )}
       {/* {layout === "vr" && <Configurator />} */}
 
-      <Dashboard></Dashboard>
       
+      <Dashboard></Dashboard>
 
 
-      <Notifications></Notifications>
-      <Overview></Overview>
+
+      {/* <Notifications></Notifications>
+      <Overview></Overview> */}
 
     </ThemeProvider>
   );

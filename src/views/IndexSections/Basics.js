@@ -190,7 +190,7 @@ export default function Basics() {
               <Label check>
                 <Input type="checkbox" />
                 <span className="form-check-sign" />
-                Unchecked
+                UncheckedSi
               </Label>
             </FormGroup>
             <FormGroup check>
