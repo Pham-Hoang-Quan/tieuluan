@@ -182,7 +182,7 @@ export default function CreatePollScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sk-proj-sVTv98za1WFc5pdjJAdtT3BlbkFJTXFfDopuNWcmItU5fDvJ"
+          "Authorization": "Bearer "
         },
         body: JSON.stringify({
           model: "dall-e-2",
