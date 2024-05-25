@@ -82,7 +82,7 @@ const ModalEdit = ({ votingInfo, loadVotingInfo }) => {
 
                 const userVoting = JSON.parse(localStorage.getItem("user-voting"));
                 console.log("User voting: ", userVoting._id);
-                const res = await fetch(`http://localhost:5500/api/votings/updateVoting/${votingInfo._id}`, {
+                const res = await fetch(`/api/votings/updateVoting/${votingInfo._id}`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

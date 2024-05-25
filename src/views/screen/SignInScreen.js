@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from "context/AppContext";
 import { useContext } from "react";
 import { Button as ButtonAnt, Divider, notification, Space } from 'antd';
+import axios from "axios";
 
 
 export default function SignInScreen({ account }) {
@@ -123,27 +124,24 @@ export default function SignInScreen({ account }) {
     const signInWithMongodb = async () => {
         console.log("sign in", email, password)
         try {
-            const payload = { email, password };
-            console.log("Sending payload:", payload);
+            const res = await axios.post(`/api/auth/login`, {
+                email: email,
+                password: password
+            })
+                .then((res) => {
+                    console.log(res.data.user);
+                    if (res.data.user.userId == "0") {
+                        openNotification(res.data.user.name)
+                        return
+                    }
+                    if (res.data.error) {
+                        throw new Error(res.data.error);
+                    }
 
-            const res = await fetch(`http://localhost:5500/api/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await res.json();
-            if (data.user.userId == "0") {
-                openNotification(data.name)
-                return
-            }
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            localStorage.setItem("user-voting", JSON.stringify(data.user));
-            setAuthUser(data.user);
-            navigate('/');
+                    localStorage.setItem("user-voting", JSON.stringify(res.data.user));
+                    setAuthUser(res.data.user);
+                    navigate('/');
+            })
         } catch (error) {
             // toast.error(error.message);
         } finally {

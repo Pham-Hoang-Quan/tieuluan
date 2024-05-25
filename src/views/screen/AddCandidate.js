@@ -138,7 +138,7 @@ export default function AddCandidate() {
             }
             const id = generateRandomId();
             setIdCan(id);
-            const res = await fetch(`http://localhost:5500/api/candidates/add/${idVoting}`, {
+            const res = await fetch(`/api/candidates/add/${idVoting}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -165,7 +165,7 @@ export default function AddCandidate() {
 
     const handleAddCandidateFormFile = async (imgUrl, name, description) => {
         try {
-            const res = await fetch(`http://localhost:5500/api/candidates/add/${idVoting}`, {
+            const res = await fetch(`/api/candidates/add/${idVoting}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -189,7 +189,7 @@ export default function AddCandidate() {
     }
     const loadCandidates = async () => {
         try {
-            const res = await fetch(`http://localhost:5500/api/votings/getAllCandiddates/${idVoting}`);
+            const res = await fetch(`/api/votings/getAllCandiddates/${idVoting}`);
             if (res.ok) {
                 const data = await res.json();
                 console.log(data);

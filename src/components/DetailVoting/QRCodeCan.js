@@ -1,40 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import QRCode from 'qrcode.react';
-import { ethers } from "ethers";
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
-import { getDatabase, ref as dbRef, set, onValue, query, orderByChild, equalTo, child, get } from "firebase/database";
-import { database } from "../../firebase";
+
 import { CardBody, Row, Col, ListGroup, ListGroupItem } from "reactstrap";
 import { Card, CardHeader, CardFooter, Button } from "reactstrap";
 const QRCodeCan = ({ userId, votingId }) => {
-
     const [updateVoteList, setUpdateVoteList] = React.useState([]);
     const [candidateNames, setCandidateNames] = React.useState([]);
     React.useEffect(() => {
-        const signer = new ethers.providers.Web3Provider(
-            window.ethereum,
-        ).getSigner();
-        const sdk = ThirdwebSDK.fromSigner(signer, "sepolia");
-        const smartContractAddress = "0xe9fE15A6Be86a57c9A8dbB3dcD4441CFE24471C0"
-
-        // lấy các update từ smart contract,
-
-
         const getUpdateVoteList = async () => {
             try {
                 if (votingId && userId && candidateNames.length <= 0) {
-                    const contract = await sdk.getContract(smartContractAddress);
-                    const Data = await contract.call("getVoteUpdatesByIdVotingAndUser", [votingId, userId]);
-                    // gán các úpdate vào state updateVoteList
+                    const res = await fetch(`/api/smartcontract/getVoteUpdatesByIdVotingAndUser/${votingId}/${userId}`)
+                    const Data = await res.json();
+                    console.log("getVoteUpdatesByIdVotingAndUser ", Data)
                     setUpdateVoteList(Data);
-
                     // nếu không có update nào thì lấy ra các vote của user đó
                     if (Data.length == 0) {
-                        const votesByUserId = await contract.call("getvotesByIdUser", [userId]);
+                        const res = await fetch(`/api/smartcontract/getVoteByIdUser/${userId}`)
+                        const votesByUserId = await res.json();
                         votesByUserId.map(async (vote) => {
                             console.log("Vote", vote);
                             if (vote.idVoting == votingId) {
-                                const response = await fetch(`http://localhost:5500/api/candidates/${vote.idCandidate}`);
+                                const response = await fetch(`/api/candidates/${vote.idCandidate}`);
                                 if (response.ok) {
                                     const candidateData = await response.json();
                                     console.log("CandidateData", candidateData.name);
@@ -48,7 +35,7 @@ const QRCodeCan = ({ userId, votingId }) => {
                     }
 
                     const firstVote = Data[0];
-                    const response = await fetch(`http://localhost:5500/api/candidates/${firstVote.idCandidateOld}`);
+                    const response = await fetch(`/api/candidates/${firstVote[3]}`);
                     if (response.ok) {
                         const candidateData = await response.json();
                         console.log("CandidateData", candidateData.name);
@@ -58,11 +45,10 @@ const QRCodeCan = ({ userId, votingId }) => {
                         console.log("No data available");
                     }
 
-                    // console.log("DataUpdate", Data);
                     Data.map(async (update) => {
                         console.log("New candidate id", update.idCandidateNew);
 
-                        const response = await fetch(`http://localhost:5500/api/candidates/${update.idCandidateNew}`);
+                        const response = await fetch(`/api/candidates/${update[2]}`);
                         if (response.ok) {
                             const candidateData = await response.json();
                             console.log("CandidateData", candidateData.name);
@@ -71,25 +57,13 @@ const QRCodeCan = ({ userId, votingId }) => {
                         } else {
                             console.log("No data available");
                         }
-
-                        // const candidatesRef = dbRef(database, `candidates/${update.idCandidateNew}`);
-                        // const snapshot = await get(candidatesRef);
-                        // if ((snapshot.exists())) {
-                        //     console.log("CandidateData", snapshot.val().name);
-                        //     const candidateName = snapshot.val().name;
-                        //     setCandidateNames(prevNames => [...prevNames, candidateName]);
-                        // } else {
-                        //     console.log("No data available");
-                        // }
-
-                        // const candidateName = getCanName(update.idCandidateNew);
-                        // console.log("CandidateName", candidateName);
-                        // setCandidateNames(prevNames => [...prevNames, candidateName]);
                     })
                     console.log("Những update", Data);
                     console.log("VoteUpdate", updateVoteList);
 
                     console.log("CandidateNames", candidateNames);
+
+
 
                 }
             } catch (error) {
@@ -98,8 +72,6 @@ const QRCodeCan = ({ userId, votingId }) => {
         }
         getUpdateVoteList()
     }, [votingId, userId]);
-
-
     // Component logic and state go here
     const getInfo = () => {
         let info = "";
@@ -140,11 +112,10 @@ const QRCodeCan = ({ userId, votingId }) => {
                             </Col>
                             {/* <p>{getInfo()}</p> */}
                         </Row>
-                        
                     </Col>
                 </CardBody>
             </Card>
-            
+
         </div>
     );
 };

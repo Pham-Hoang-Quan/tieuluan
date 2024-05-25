@@ -37,18 +37,14 @@ const responsive = {
 function PublicVotings() {
   const [polls, setPolls] = useState([]);
   const [recentPolls, setRecentPolls] = useState([]);
-  const [countVotings, setCountVotings] = useState(0);
-  const [countVotingsDoing, setCountVotingsDoing] = useState([]);
-
   const [users, setUsers] = useState([]);
-  const [countUsers, setCountUsers] = useState(0);
 
   const navigate = useNavigate();
   useEffect(() => {
     // hàm láy danh sách votings từ mongodb
     async function getAllVotings() {
       try {
-        const response = await fetch(`http://localhost:5500/api/votings/getVotings/public`);
+        const response = await fetch(`/api/votings/getVotings/public`);
         const data = await response.json();
         console.log(data);
         setPolls(data);
@@ -58,19 +54,7 @@ function PublicVotings() {
         console.error(error);
       }
     }
-
-    // hàm lấy danh sách các users từ mongodb
-    async function getAllUsers() {
-      try {
-        const response = await fetch(`http://localhost:5500/api/users/getUsers/user`);
-        const data = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
     getAllVotings();
-    getAllUsers();
     console.log("Votings: " + recentPolls);
   }, []);
 

@@ -131,7 +131,6 @@ export const getPublicVotings = async (req, res) => {
     }
 };
 
-
 // hàm cập nhật thông tin của một voting truyền vào id từ param 
 // và body gồm có title, description, imgUrl, startAt, endAt
 export const updateVoting = async (req, res) => {

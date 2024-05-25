@@ -41,24 +41,11 @@ function PollsList() {
     // const [controller, dispatch, users] = useMaterialUIController();
     const [tableData, setTableData] = useState({ columns: [], rows: [] });
     const [polls, setPolls] = useState([])
+    
     useEffect(() => {
-        // async function fetchUsers() {
-        //     const db = getDatabase();
-        //     const usersRef = ref(db, 'polls');
-        //     const snapshot = await get(usersRef);
-        //     if (snapshot.exists()) {
-        //         setPolls(snapshot.val());
-        //         // console.log(snapshot.val());
-        //         console.log(polls);
-        //     } else {
-        //         console.log("No data available");
-        //     }
-        // }
-        // fetchUsers();
-
         async function getVotings() {
             try {
-                const response = await fetch(`http://localhost:5500/api/votings/getVotings/all`);
+                const response = await fetch(`/api/votings/getVotings/all`);
                 const data = await response.json();
                 console.log(data);
                 setPolls(data);
@@ -129,7 +116,7 @@ function PollsList() {
                                     coloredShadow="info"
                                 >
                                     <MDTypography variant="h6" color="white">
-                                        Users Table
+                                        Votings Table
                                     </MDTypography>
                                 </MDBox>
                                 <MDBox pt={3}>
@@ -143,61 +130,6 @@ function PollsList() {
                                 </MDBox>
                             </Card>
                         </Grid>}
-                    {/* <Grid item xs={12}>
-                        <Card>
-                            <MDBox
-                                mx={2}
-                                mt={-3}
-                                py={3}
-                                px={2}
-                                variant="gradient"
-                                bgColor="info"
-                                borderRadius="lg"
-                                coloredShadow="info"
-                            >
-                                <MDTypography variant="h6" color="white">
-                                    Authors Table
-                                </MDTypography>
-                            </MDBox>
-                            <MDBox pt={3}>
-                                <DataTable
-                                    table={{ columns, rows }}
-                                    isSorted={false}
-                                    entriesPerPage={false}
-                                    showTotalEntries={false}
-                                    noEndBorder
-                                />
-                            </MDBox>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Card>
-                            <MDBox
-                                mx={2}
-                                mt={-3}
-                                py={3}
-                                px={2}
-                                variant="gradient"
-                                bgColor="info"
-                                borderRadius="lg"
-                                coloredShadow="info"
-                            >
-                                <MDTypography variant="h6" color="white">
-                                    Projects Table
-                                </MDTypography>
-                            </MDBox>
-                            <MDBox pt={3}>
-                                <DataTable
-                                    table={{ columns: pColumns, rows: pRows }}
-                                    isSorted={false}
-                                    entriesPerPage={false}
-                                    showTotalEntries={false}
-                                    noEndBorder
-                                />
-                            </MDBox>
-                        </Card>
-                    </Grid> */}
-
                 </Grid>
             </MDBox>
 

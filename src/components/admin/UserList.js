@@ -57,7 +57,7 @@ function UserList() {
     async function handleBlockUser(id) {
         console.log(id.key)
         try {
-            const response = await fetch(`http://localhost:5500/api/users/blockUser/${id.key}`, {
+            const response = await fetch(`/api/users/blockUser/${id.key}`, {
                 method: 'PUT',
             });
             const data = await response.json();
@@ -74,7 +74,7 @@ function UserList() {
     async function handleUnBlockUser(id) {
         console.log(id.key)
         try {
-            const response = await fetch(`http://localhost:5500/api/users/unblockUser/${id.key}`, {
+            const response = await fetch(`/api/users/unblockUser/${id.key}`, {
                 method: 'PUT',
             });
             const data = await response.json();
@@ -91,7 +91,7 @@ function UserList() {
     }
     async function getUsers() {
         try {
-            const response = await fetch(`http://localhost:5500/api/users/getUsers/unblocked`, {
+            const response = await fetch(`/api/users/getUsers/unblocked`, {
                 method: "GET",
             });
             const data = await response.json();
@@ -102,7 +102,7 @@ function UserList() {
     }
     async function getBlockedUsers() {
         try {
-            const response = await fetch(`http://localhost:5500/api/users/getUsers/blocked`, {
+            const response = await fetch(`/api/users/getUsers/blocked`, {
                 method: "GET",
             });
             const data = await response.json();

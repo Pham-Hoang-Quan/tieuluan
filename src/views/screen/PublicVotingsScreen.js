@@ -51,7 +51,7 @@ export default function PublicVotingsScreen({ isLogin }) {
     // hàm getYourVotings
     async function getYourVotings() {
         try {
-            const response = await fetch(`http://localhost:5500/api/votings/getVotings/public`);
+            const response = await fetch(`/api/votings/getVotings/public`);
             const data = await response.json();
             console.log(data);
             setVotings(data)
@@ -82,9 +82,6 @@ export default function PublicVotingsScreen({ isLogin }) {
                         <div style={{
                             marginTop: '100px',
                         }}>
-
-                            <Dalle3Component></Dalle3Component>
-
                             <Row>
                                 <Col lg='6' md='6'>
                                     <h3>Your Votings</h3>
@@ -184,7 +181,7 @@ export default function PublicVotingsScreen({ isLogin }) {
                         </div>
 
                         {/* logic của phân trang, lấy current page  */}
-                        <div style={{
+                        {/* <div style={{
                             backgroundColor: 'white',
                         }}>
                             <List
@@ -223,7 +220,7 @@ export default function PublicVotingsScreen({ isLogin }) {
                                     </List.Item>
                                 )}
                             />
-                        </div>
+                        </div> */}
 
 
                     </Container>

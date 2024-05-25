@@ -54,6 +54,7 @@ import Top5Table from "../../components/DetailVoting/Top5Table";
 import Top5Chart from "components/DetailVoting/Top5Chart";
 import FinishVoting from "components/DetailVoting/FinishVoting";
 import ModalEdit from "components/DetailVoting/ModalEdit";
+import axios from "axios";
 
 let ps = null;
 
@@ -94,8 +95,16 @@ export default function VotingDetail() {
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
             const contract = await sdk.getContract(smartContractAddress);
-            const result = await contract.call("addVote", ['v' + id, userInfor._id, canIdString, idVoting, id]);
-            setVotedModal(true);
+            const res = await axios.post(`/api/smartcontract/addVote`, {
+                _id: 'v' + id,
+                _idUser: userInfor._id,
+                _idCandidate: canIdString,
+                _idVoting: idVoting,
+                _time: id
+            }).then(result => {
+                console.log(result.data);
+                setVotedModal(true);
+            })
         } catch (error) {
             // alert(error.reason);
             console.log(error.message);
@@ -114,7 +123,17 @@ export default function VotingDetail() {
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
             const contract = await sdk.getContract(smartContractAddress);
-            const result = await contract.call("updateVote", ['v' + id, userInfor._id, canIdString, canIdOld, idVoting, id]);
+            const res = await axios.post(`/api/smartcontract/updateVote`, {
+                _id: 'v' + id,
+                _idUser: userInfor._id,
+                _idCandidateNew: canIdString,
+                _idCandidateOld: canIdOld,
+                _idVoting: idVoting,
+                _time: id
+            }).then(result => {
+                console.log(result.data);
+                setVotedModal(true);
+            })
             setVotedModal(true);
         } catch (error) {
             // alert(error.reason);
@@ -130,7 +149,7 @@ export default function VotingDetail() {
     // hàm lấy danh sách các ứng viên từ firebase
     const loadCandidates = async () => {
         try {
-            const res = await fetch(`http://localhost:5500/api/votings/getAllCandiddates/${idVoting}`);
+            const res = await fetch(`/api/votings/getAllCandiddates/${idVoting}`);
             if (res.ok) {
                 const data = await res.json();
                 setCandidates(data);
@@ -142,7 +161,7 @@ export default function VotingDetail() {
     const loadVotingInfo = async () => {
         // lấy thông tin cuộc bình chọn từ mongodb
         try {
-            const res = await fetch(`http://localhost:5500/api/votings/${idVoting}`);
+            const res = await fetch(`/api/votings/${idVoting}`);
             if (res.ok) {
                 const data = await res.json();
                 setVotingInfo(data);
@@ -208,7 +227,7 @@ export default function VotingDetail() {
                 const userId = userInfor ? userInfor._id : null;
                 const checkUserJoinVoting = async () => {
                     try {
-                        const res = await fetch(`http://localhost:5500/api/participants/checkUser/${idVoting}`, {
+                        const res = await fetch(`/api/participants/checkUser/${idVoting}`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -319,7 +338,7 @@ export default function VotingDetail() {
 
     const handleJoinVoting = async () => {
         try {
-            const res = await fetch(`http://localhost:5500/api/participants/addUserWithPassword/${idVoting}`, {
+            const res = await fetch(`/api/participants/addUserWithPassword/${idVoting}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -423,6 +442,7 @@ export default function VotingDetail() {
                                     <Col>
                                         <footer className="blockquote-footer">Posted: <cite title="Source Title">{moment(`${votingInfo.startAt}`, 'YYYYMMDD').fromNow()}</cite></footer>
                                         <footer className="blockquote-footer">End at: <cite title="Source Title">{moment(`${votingInfo.endAt}`, 'YYYYMMDD').fromNow()}</cite></footer>
+                                        <footer className="blockquote-footer">ID: <cite title="Source Title">{votingInfo._id}</cite></footer>
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-between align-items-center">

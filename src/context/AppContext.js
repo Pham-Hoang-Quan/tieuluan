@@ -25,7 +25,6 @@ export const AppProvider = ({ children }) => {
             }
         });
         setAuthUser(JSON.parse(localStorage.getItem('user-voting')));
-        
     }, [auth]);
 
     return (

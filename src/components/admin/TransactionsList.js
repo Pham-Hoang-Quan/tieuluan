@@ -16,9 +16,14 @@ import DataTable from "examples/Tables/DataTable";
 // Data
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
+import { useMaterialUIController } from "context";
 import { useEffect, useState } from "react";
+import { getDatabase, ref, get } from "firebase/database";
 import MDAvatar from "components/MDAvatar";
-import team2 from "assets/images/team-2.jpg";
+
+import moment from "moment";
+const apiKey = 'YEP15A9J216FW5YA6C7N9VSZZ7BCDS3R83';
+const address = '0xe9fE15A6Be86a57c9A8dbB3dcD4441CFE24471C0';
 
 const Author = ({ image, name, email }) => (
     <MDBox display="flex" alignItems="center" lineHeight={1}>
@@ -33,131 +38,123 @@ const Author = ({ image, name, email }) => (
 );
 
 function TransactionsList() {
-    const { columns, rows } = authorsTableData();
-    const { columns: pColumns, rows: pRows } = projectsTableData();
-    // const [controller, dispatch, users] = useMaterialUIController();
     const [tableData, setTableData] = useState({ columns: [], rows: [] });
-    const [trans, setTrans] = useState([]);
-    // useEffect(() => {
-    //     async function fetchUsers() {
-    //         const db = getDatabase();
-    //         const usersRef = ref(db, 'users');
-    //         const snapshot = await get(usersRef);
-    //         if (snapshot.exists()) {
-    //             setUsers(snapshot.val());
-    //             // console.log(snapshot.val());
-    //             // console.log(users);
-    //         } else {
-    //             console.log("No data available");
-    //         }
-    //     }
-    //     fetchUsers();
-    // }, [users]);
-
+    const [polls, setPolls] = useState([])
     useEffect(() => {
-        const fetchData = async () => {
+        async function getVotings() {
             try {
-                const address = "0xe9fE15A6Be86a57c9A8dbB3dcD4441CFE24471C0"; // Địa chỉ cụ thể bạn muốn truy vấn
-                const chain = "sepolia"; // Mạng blockchain bạn muốn truy vấn
-                const url = `https://deep-index.moralis.io/api/v2.2/${address}?chain=${chain}`;
-
-                const response = await fetch(url, {
-                    headers: {
-                        'x-api-key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyNWJlYzA3LTFhZTAtNGU4Ny1hYWUyLTE1OWM2YmQzM2MwOCIsIm9yZ0lkIjoiMzkxNDQxIiwidXNlcklkIjoiNDAyMjE4IiwidHlwZUlkIjoiNDJkYWI1MzAtZmM1Ni00MjQ5LTk5YmItZWE1YWE3YjhmM2E0IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTUxNjM3MzMsImV4cCI6NDg3MDkyMzczM30.WG6SseusNECSeXiYsTezKhN6oA-aFTaZeoNLT2J7Qws',
-                        'Accept': 'application/json',
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Không thể tải dữ liệu từ server");
-                }
-
-                const responseData = await response.json();
-                setTrans(responseData.result);
-                console.log(responseData.result);
+                const response = await fetch(`/api/votings/getVotings/all`);
+                const data = await response.json();
+                console.log(data);
+                setPolls(data);
             } catch (error) {
-                console.log(error);
+                console.error(error);
             }
-        };
+        }
+        getVotings();
+    }, []);
 
-        fetchData();
-    }, [trans]);
+    const [transactions, setTransactions] = useState([]);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
-        if (
-            true 
-            
-            // trans
-            //  && typeof trans === 'object'
-        ) {
+        getTransactions();
+    }, [transactions]);
+
+    const getTransactions = async () => {
+        try {
+            const response = await fetch(
+                `https://api-sepolia.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${address}&apikey=${apiKey}`
+            );
+            const data = await response.json();
+            if (data.status === '1') {
+                setTransactions(data.result);
+            } else {
+                setErrorMessage(data.message);
+            }
+        } catch (error) {
+            console.error('Lỗi lấy giao dịch: ', error);
+            setErrorMessage('Lỗi lấy giao dịch: ' + error.message);
+        }
+    };
+
+    useEffect(() => {
+        if (transactions && typeof transactions === 'object') {
             const columns = [
-                // { Header: "No", accessor: "no" },
-                // { Header: "Name", accessor: "name" },
-                // { Header: "ID", accessor: "id" },
-                // { Header: "Created ", accessor: "createAt" },
-                // { Header: "Action", accessor: "action" },
-                // { Header: "Address", accessor: "address" },
-                // { Header: "Email", accessor: "email" },
-                // { Header: "Avatar URL", accessor: "avtUrl" },
-                // Add more columns as needed
-                { Header: "Hash", accessor: "hash" },
-                { Header: "From Address", accessor: "from_address" },
-                { Header: "Input", accessor: "input" },
-                { Header: "Block Timestamp", accessor: "block_timestamp" },
+                { Header: "No", accessor: "no" },
+                { Header: "Name", accessor: "name" },
+                { Header: "ID", accessor: "id" },
+                { Header: "Created ", accessor: "createAt" },
+                { Header: "End ", accessor: "endAt" },
+                { Header: "Action", accessor: "action" },
             ];
 
-            const rows = Object.keys(trans || {})
-                .map((hash) => {
-                    const tran = trans[hash];
-                    const input = tran.input;
+            const rows = Object.keys(transactions || {})
+                .map((id) => {
+                    const tran = transactions[id];
+                    console.log(tran)
                     if (tran) {
                         return {
-                            hash: tran.hash,
-                            from_address: tran.from_address,
-                            input: tran.input,
-                            block_timestamp: tran.block_timestamp,
+                            no: Object.keys(transactions || {}).indexOf(id) + 1,
+                            id: tran.transactionHash,
+                            name: <Author image={tran.imgUrl} name={tran.title} email={"Data: " + (tran ? tran.data : 'N/A')} />,
+                            email: tran.timeStamp,
+                            address: tran.address,
+                            createAt: <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
+                                {moment(tran.createdAt).format("MMM Do YY")}
+                            </MDTypography>,
+                            endAt: <MDTypography component="a" href="#" variant="caption" color="text" fontWeight="medium">
+                                {moment(tran.endAt).format("MMM Do YY")}
+                            </MDTypography>,
+                            action: <MDTypography component="a" href="#" variant="caption" color="info" fontWeight="medium">
+                                Detail
+                            </MDTypography>
+                            // Add more fields as needed
                         };
                     }
                 })
 
             setTableData({ columns, rows });
         }
-    }, [trans]);
+    }, [polls]);
 
     return (
         <DashboardLayout>
             <DashboardNavbar />
             <MDBox pt={6} pb={3}>
                 <Grid container spacing={6}>
-                    <Grid item xs={12}>
-                        <Card>
-                            <MDBox
-                                mx={2}
-                                mt={-3}
-                                py={3}
-                                px={2}
-                                variant="gradient"
-                                bgColor="info"
-                                borderRadius="lg"
-                                coloredShadow="info"
-                            >
-                                <MDTypography variant="h6" color="white">
-                                    Transactions Table
-                                </MDTypography>
-                            </MDBox>
-                            <MDBox pt={3}>
-                                <DataTable
-                                    table={{ columns, rows: rows }}
-                                    isSorted={false}
-                                    entriesPerPage={false}
-                                    showTotalEntries={false}
-                                    noEndBorder
-                                />
-                            </MDBox>
-                        </Card>
-                    </Grid>
+                    {
+                        transactions &&
+                        <Grid item xs={12}>
+                            <Card>
+                                <MDBox
+                                    mx={2}
+                                    mt={-3}
+                                    py={3}
+                                    px={2}
+                                    variant="gradient"
+                                    bgColor="info"
+                                    borderRadius="lg"
+                                    coloredShadow="info"
+                                >
+                                    <MDTypography variant="h6" color="white">
+                                        Transactions Table
+                                    </MDTypography>
+                                </MDBox>
+                                <MDBox pt={3}>
+                                    <DataTable
+                                        table={tableData}
+                                        isSorted={false}
+                                        entriesPerPage={false}
+                                        showTotalEntries={false}
+                                        noEndBorder
+                                    />
+                                </MDBox>
+                            </Card>
+                        </Grid>}
                 </Grid>
             </MDBox>
+
         </DashboardLayout>
     );
 }

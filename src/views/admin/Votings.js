@@ -56,6 +56,7 @@ import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
 import Billing from "layouts/billing";
 import PollsList from "components/admin/PollsList";
+import TransactionsList from "components/admin/TransactionsList";
 
 
 export default function Votings() {
@@ -127,31 +128,6 @@ export default function Votings() {
 
             return null;
         });
-
-    const configsButton = (
-        <MDBox
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="3.25rem"
-            height="3.25rem"
-            bgColor="white"
-            shadow="sm"
-            borderRadius="50%"
-            position="fixed"
-            right="2rem"
-            bottom="2rem"
-            zIndex={99}
-            color="dark"
-            sx={{ cursor: "pointer" }}
-            onClick={handleConfiguratorOpen}
-        >
-            <Icon fontSize="small" color="inherit">
-                settings
-            </Icon>
-        </MDBox>
-    );
-
     return (
         <ThemeProvider theme={darkMode ? themeDark : theme}>
             <CssBaseline />
@@ -169,10 +145,9 @@ export default function Votings() {
                     {/* {configsButton} */}
                 </>
             )}
-            {/* {layout === "vr" && <Configurator />} */}
+            
             <PollsList></PollsList>
-            {/* <Billing></Billing> */}
-
+            
         </ThemeProvider>
     );
 }

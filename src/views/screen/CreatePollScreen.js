@@ -1,3 +1,4 @@
+
 import React, { useContext, useState, useEffect } from "react";
 import classnames from "classnames";
 // javascript plugin used to create scrollbars on windows
@@ -34,10 +35,10 @@ import { database, storage } from "firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { getDatabase, ref as dbRef, set, onValue } from "firebase/database";
 import Candidates from "components/CreatePoll/Candidates";
+import env from "react-dotenv";
 
 import { useNavigate } from 'react-router-dom';
 let ps = null;
-
 export default function CreatePollScreen() {
 
   const { userData, authUser } = useContext(AppContext);
@@ -102,7 +103,7 @@ export default function CreatePollScreen() {
       try {
         const userVoting = JSON.parse(localStorage.getItem("user-voting"));
         console.log("User voting: ", userVoting._id);
-        const res = await fetch(`http://localhost:5500/api/votings/create`, {
+        const res = await fetch(`/api/votings/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -133,7 +134,6 @@ export default function CreatePollScreen() {
     } catch (e) {
       console.error(e);
     }
-
   }
 
   const handleImageUpload = (event) => {
@@ -176,13 +176,13 @@ export default function CreatePollScreen() {
   }, []);
 
   const handleGenerateImage = async () => {
-    console.log("Generating image")
+    console.log("Generating image" , )
     try {
       const response = await fetch("https://api.openai.com/v1/images/generations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer "
+          "Authorization": "Bearer sk-proj-CklyUXsPDeu1w56phw4jT3BlbkFJyrvLz52kCUyWyXlNVld5"
         },
         body: JSON.stringify({
           model: "dall-e-2",
@@ -193,6 +193,8 @@ export default function CreatePollScreen() {
       });
 
       const data = await response.json();
+      // nếu response là 401 thì báo lỗi
+
       if (data) {
         const imgUrl = data.data[0].url;
         console.log(data.data[0].url);
@@ -209,6 +211,7 @@ export default function CreatePollScreen() {
 
     } catch (error) {
       console.error(error);
+      alert("Your prompt is not valid. Please try again");
     }
     setOpen(false)
   };

@@ -24,6 +24,7 @@ import PublicVotings from "components/home/PublicVotings";
 import { MaterialUIControllerProvider } from "context";
 import UploadImage from "components/home/UploadImage";
 import { message } from 'antd';
+import axios from "axios";
 
 
 export default function Home({ isLogin }) {
@@ -39,10 +40,10 @@ export default function Home({ isLogin }) {
     const [messageApi, contextHolder] = message.useMessage();
     const warning = (message) => {
         messageApi.open({
-          type: 'warning',
-          content: message,
+            type: 'warning',
+            content: message,
         });
-      };
+    };
 
     const userInfor = JSON.parse(localStorage.getItem("user-voting"));
 
@@ -53,70 +54,37 @@ export default function Home({ isLogin }) {
             document.body.classList.toggle("index-page");
         };
     }, []);
-    const handleJoinn = async () => {
-        if (votingInfo.isPrivate) {
-            try {
-                const res = await fetch(`http://localhost:5500/api/votings/check-password`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        votingId: votingInfo._id,
-                        password: document.querySelector("#password").value
-                    }),
-
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log(data);
-                    // navigate(`/votingDetail?votingId=${votingInfo._id}`);
-                } else {
-                    alert("Password is incorrect");
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            // navigate(`/votingDetail?votingId=${votingInfo._id}`);
-        }
-    }
 
     const handleJoin = async () => {
         if (votingInfo.isPrivate) {
             try {
                 const idVoting = votingInfo._id;
-                const res = await fetch(`http://localhost:5500/api/participants/addUserWithPassword/${idVoting}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ userId: userInfor._id, password }),
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    // setIsJoined(data.isJoin);
-                    navigate(`/votingDetail?votingId=${votingInfo._id}`)
-                } else {
-                    warning("Passwords do not match")
-                }
+                axios.post(`/api/participants/addUserWithPassword/${idVoting}`, { userId: userInfor._id, password })
+                    .then(res => {
+                        console.log(res);
+                        console.log(res.data);
+                        navigate(`/votingDetail?votingId=${votingInfo._id}`)
+                    })
+                    .catch(err => {
+                        warning("Passwords do not match")
+                        console.log(err);
+                    })
             } catch (e) {
                 console.error(e);
             }
         } else {
             try {
                 const idVoting = votingInfo._id;
-                const res = await fetch(`http://localhost:5500/api/participants/addParticipant/${idVoting}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ userId: userInfor._id }),
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    // setIsJoined(data.isJoin);
-                    navigate(`/votingDetail?votingId=${votingInfo._id}`)
-
-                }
+                axios.post(`/api/participants/addParticipant/${idVoting}`, { userId: userInfor._id })
+                    .then(res => {
+                        console.log(res);
+                        console.log(res.data);
+                        navigate(`/votingDetail?votingId=${votingInfo._id}`)
+                    })
+                    .catch(err => {
+                        warning("Passwords do not match")
+                        console.log(err);
+                    })
             } catch (e) {
                 console.error(e);
             }
@@ -126,15 +94,15 @@ export default function Home({ isLogin }) {
     const handleSearch = async () => {
         // lấy thong tin voting từ mongodb
         try {
-            const res = await fetch(`http://localhost:5500/api/votings/${idSearch}`);
-            if (res.ok) {
-                const data = await res.json();
-                console.log(data);
-                setVotingInfo(data);
-                setFormModal(true);
-            } else {
-                warning("This voting is not available");
-            }
+            const res = await axios.get(`/api/votings/${idSearch}`)
+                .then(res => {
+                    console.log(res);
+                    setVotingInfo(res.data);
+                    setFormModal(true);
+                }).catch(err => {
+                    console.log(err);
+                    warning("This voting is not available");
+                });
         } catch (e) {
             console.error(e);
         }

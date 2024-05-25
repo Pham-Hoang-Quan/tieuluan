@@ -34,6 +34,7 @@ import { Drawer } from "@mui/material";
 import { ref, uploadBytesResumable, getDownloadURL, } from "firebase/storage";
 import { database, storage } from "firebase.js";
 import { useNavigate } from 'react-router-dom';
+import axios from "axios";
 
 
 export default function IndexNavbar({ isLogin }) {
@@ -98,25 +99,20 @@ export default function IndexNavbar({ isLogin }) {
     signOut(auth).then(() => {
       // Sign-out successful.
       console.log("Sign-out successful");
-      window.location.href = "/signIn-page";
-
-
     }).catch((error) => {
       // An error happened.
       console.error(error);
     });
 
     try {
-      const res = await fetch("http://localhost:5500/api/auth/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      localStorage.removeItem("chat-user");
-      setAuthUser(null);
+      //////
+      const response = await axios.post(`/api/auth/logout`)
+        .then((res) => {
+          console.log(res);
+          localStorage.removeItem("user-voting");
+          setAuthUser(null);
+          navigate('/signIn-page');
+        })
     } catch (error) {
       // toast.error(error.message);
     } finally {
@@ -124,7 +120,7 @@ export default function IndexNavbar({ isLogin }) {
     }
   }
 
-  const [selectedImage, setSelectedImage] = useState(userInfo.avtUrl);
+  const [selectedImage, setSelectedImage] = useState(userInfo ? userInfo.avtUrl : null);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -198,32 +194,25 @@ export default function IndexNavbar({ isLogin }) {
       }
 
       // Updating user information in MongoDB
-      const res = await fetch(`http://localhost:5500/api/users/updateUser/${userInfo._id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: nameInput.value,
-          email: emailInput.value,
-          avtUrl: imageUrl,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log(data);
-      } else {
-        throw new Error("Failed to update user information in MongoDB");
-      }
+      const response = await axios.post(`/api/users/updateUser/${userInfo._id}`, {
+        name: nameInput.value,
+        email: emailInput.value,
+        avtUrl: imageUrl,
+      }).then(response => {
+        console.log(response);
+      }).catch(err => {
+        console.error(err);
+      })
 
       // Fetch updated user information from MongoDB and update localStorage
-      const res2 = await fetch(`http://localhost:5500/api/users/${userInfo._id}`);
-      if (res2.ok) {
-        const data2 = await res2.json();
-        localStorage.setItem("user-voting", JSON.stringify(data2));
-        // setUserInfo(data2); // Uncomment if setUserInfo is needed
-      } else {
-        throw new Error("Failed to fetch updated user information from MongoDB");
-      }
+      const response2 = await axios.get(`/api/users/${userInfo._id}`)
+        .then((res) => {
+          console.log(res);
+          localStorage.setItem("user-voting", JSON.stringify(res.data));
+        })
+        .catch((error) => {
+          console.error(error);
+        });
 
     } catch (error) {
       console.error(error);
@@ -249,7 +238,7 @@ export default function IndexNavbar({ isLogin }) {
         return;
       }
 
-      const res = await fetch(`http://localhost:5500/api/auth/changePassword/${userInfo._id}`, {
+      const res = await fetch(`/api/auth/changePassword/${userInfo._id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -257,7 +246,6 @@ export default function IndexNavbar({ isLogin }) {
           newPassword
         }),
       });
-
       if (res.ok) {
         const data = await res.json();
         console.log("Password updated successfully on MongoDB", data);
@@ -278,6 +266,19 @@ export default function IndexNavbar({ isLogin }) {
         console.error("Error from server: ", errorData.error);
         alert(`Error: ${errorData.error}`);
       }
+
+      ////
+      const response = await axios.post(`/api/auth/changePassword/${userInfo._id}`, {
+        oldPassword,
+        newPassword
+      })
+        .then((res) => {
+          console.log(res);
+          alert("Password changed successfully");
+        })
+        .catch((error) => {
+          console.error("Error changing password: ", error);
+        });
     } catch (e) {
       console.error("Error changing password: ", e);
     } finally {

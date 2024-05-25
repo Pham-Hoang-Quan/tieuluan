@@ -45,7 +45,6 @@ export const client = createThirdwebClient({
     clientId: "1192a17dcfa660494bf84eeb55d314d2"
 });
 
-
 // connect to your contract
 export const contract = getContract({
     client,
@@ -60,15 +59,11 @@ function App() {
     const [isLogin, setIsLogin] = useState(false);
     const [user, setUser] = useState(null);
     const auth = getAuth();
-
-
-
     const [state, setState] = useState({
         provider: null,
         singer: null,
         contract: null,
     })
-
     useEffect(() => {
         connectToMetamask();
 
@@ -122,7 +117,14 @@ function App() {
                                     </MaterialUIControllerProvider>
                                 </AdminRoute>
                             } />
-                            <Route path="/userList" element={
+                            <Route path="/votings" element={
+                                <AdminRoute>
+                                    <MaterialUIControllerProvider>
+                                        <Votings />
+                                    </MaterialUIControllerProvider>
+                                </AdminRoute>
+                            } />
+                            <Route path="/users" element={
                                 <AdminRoute>
                                     <MaterialUIControllerProvider>
                                         <UserListScreen />

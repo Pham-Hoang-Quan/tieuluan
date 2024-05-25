@@ -64,6 +64,7 @@ import {
     // import the wallet you want to connect
     metamaskWallet,
 } from "@thirdweb-dev/react";
+import axios from "axios";
 
 const walletConfig = metamaskWallet();
 
@@ -133,7 +134,6 @@ export default function SignUpScreen({ account }) {
                     createAt: timestamp,
                     address: account, // id của metamask trả về
                 };
-                // handleAddUseIdOnBC(user.uid);
                 // Ghi thông tin người dùng vào cơ sở dữ liệu
                 set(ref(database, 'users/' + user.uid), userData)
                     .then(() => {
@@ -153,7 +153,7 @@ export default function SignUpScreen({ account }) {
 
 
         // thêm vào mongodb
-        const res = await fetch(`http://localhost:5500/api/auth/signup`, {
+        const res = await fetch(`/api/auth/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -178,28 +178,17 @@ export default function SignUpScreen({ account }) {
         }
     }
 
-    const signer = new ethers.providers.Web3Provider(
-        window.ethereum,
-    ).getSigner();
-
-    const sdk = ThirdwebSDK.fromSigner(signer, "sepolia");
-    const ABI = abi.abi;
-
-    // function add a userId on blockchain network into userIDs array
     const handleAddUseIdOnBC = async (userId) => {
-        // setIsLoading(true);
         try {
-            const contract = await sdk.getContract("0xe9fE15A6Be86a57c9A8dbB3dcD4441CFE24471C0");
-            const result = await contract.call("addUser", [userId]);
-            console.log("Executed transaction:", result.receipt.transationHash);
+            axios.post("/api/smartcontract/addUser",
+                { user: userId }).
+                then(response => {
+                    console.log(response.data);
+                });
         } catch (error) {
-            alert(error.message);
             console.error(error);
-        } finally {
-            console.log("add userId to blockchain network successfully");
         }
     }
-
     return (
         <>
             <IndexNavbar />
@@ -316,6 +305,7 @@ export default function SignUpScreen({ account }) {
                                         </Button>
                                     </div> */}
                                 </Col>
+                                
                             </Row>
                             <div className="register-bg" />
                             {/* <div
