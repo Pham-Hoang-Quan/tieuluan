@@ -46,6 +46,8 @@
     "@testing-library/jest-dom": "5.16.5",
     "@testing-library/react": "14.0.0",
     "@testing-library/user-event": "14.4.3",
+    "@thirdweb-dev/react": "^4.6.5",
+    "@thirdweb-dev/sdk": "^4.0.66",
     "antd": "^5.16.3",
     "aos": "^3.0.0-beta.6",
     "axios": "^1.7.2",
@@ -55,12 +57,16 @@
     "chroma-js": "^2.4.2",
     "classnames": "2.3.1",
     "dotenv": "^16.4.5",
+    "ethers": "^5.7.2",
     "file-saver": "^2.0.5",
     "firebase": "^10.8.0",
     "gh-pages": "^6.1.1",
     "http": "^0.0.1-security",
+    "https-browserify": "^1.0.0",
     "moment": "^2.29.4",
+    "moralis": "^2.26.1",
     "nouislider": "15.4.0",
+    "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "perfect-scrollbar": "1.5.5",
     "qrcode.react": "^3.1.0",
@@ -80,7 +86,11 @@
     "redux": "^5.0.1",
     "sass": "1.62.1",
     "stream": "^0.0.2",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
     "stylis-plugin-rtl": "^2.1.1",
+    "thirdweb": "^5.9.0",
+    "thirdweb-react-monorepo": "github:thirdweb-dev/react",
     "util": "^0.12.5",
     "web-vitals": "3.3.1",
     "xlsx": "^0.18.5"
@@ -128,11 +138,8 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@fortawesome/fontawesome-free": "^6.5.1",
-    "assert": "^2.1.0",
-    "buffer": "^6.0.3",
-    "process": "^0.11.10",
-    "url": "^0.11.3"
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.1"
   }
 }

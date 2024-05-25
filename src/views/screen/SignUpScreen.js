@@ -41,18 +41,32 @@ import { database } from "../../firebase.js";
 import { useNavigate } from 'react-router-dom';
 import { useContext } from "react";
 // import AppContext from "antd/es/app/context.js";
-// import { prepareContractCall, sendTransaction } from "thirdweb";
+import { ethers } from "ethers";
 
+// import { prepareContractCall, sendTransaction } from "thirdweb";
+import { createThirdwebClient, getContract } from "thirdweb";
+import { defineChain } from "thirdweb/chains";
+
+import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { AppContext } from "context/AppContext";
 
 
 
+import {
+    useContractWrite,
+    useContract,
+    Web3Button,
+} from "@thirdweb-dev/react";
 
 
-
-
+import {
+    useConnect,
+    // import the wallet you want to connect
+    metamaskWallet,
+} from "@thirdweb-dev/react";
 import axios from "axios";
 
+const walletConfig = metamaskWallet();
 
 
 
@@ -77,6 +91,32 @@ export default function SignUpScreen({ account }) {
     const { userData, state } = useContext(AppContext);
 
     const { setAuthUser } = useContext(AppContext);
+
+    const connect = useConnect();
+
+    async function handleConnect() {
+        try {
+            const wallet = await connect(
+                walletConfig, // pass the wallet config object
+            );
+
+            console.log("connected to", wallet);
+        } catch (e) {
+            console.error("failed to connect", e);
+        }
+    }
+
+    useEffect(() => {
+        handleConnect();
+    }, []);
+
+    const { contract } = useContract(
+        "0xB4a2471E5984296624546b64C574741e8237dE5D",
+    );
+    const { mutateAsync, isLoading, error } = useContractWrite(
+        contract,
+        "addUser",
+    );
 
     const signup = async () => {
         createUserWithEmailAndPassword(auth, email, password)
@@ -301,6 +341,13 @@ export default function SignUpScreen({ account }) {
                         </Container>
                     </div>
                 </div>
+                <Web3Button
+                    contractAddress={"0xB4a2471E5984296624546b64C574741e8237dE5D"}
+                    // Calls the "setName" function on your smart contract with "My Name" as the first argument
+                    action={() => mutateAsync({ args: ["userId"] })}
+                >
+                    Send Transaction
+                </Web3Button>
                 <Footer />
 
             </div>
