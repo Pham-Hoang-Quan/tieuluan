@@ -8,12 +8,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/creativetimofficial/blk-design-system-react.git"
+    "url": ""
   },
   "bugs": {
     "url": "https://github.com/creativetimofficial/blk-design-system-react/issues"
   },
-  "homepage": "https://demos.creative-tim.com/blk-design-system-react/#/",
+  "homepage": "https://pollchain.github.io/voting-system",
   "keywords": [
     "react",
     "reactjs",
@@ -57,6 +57,7 @@
     "dotenv": "^16.4.5",
     "file-saver": "^2.0.5",
     "firebase": "^10.8.0",
+    "gh-pages": "^6.1.1",
     "http": "^0.0.1-security",
     "moment": "^2.29.4",
     "nouislider": "15.4.0",
@@ -93,6 +94,8 @@
     "typescript": "5.0.4"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -b main -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
