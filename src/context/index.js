@@ -4,7 +4,6 @@ import { createContext, useContext, useReducer, useMemo, useEffect, useState } f
 
 // prop-types is a library for typechecking of props
 import PropTypes from "prop-types";
-import { getDatabase, ref, get } from "firebase/database";
 // Material Dashboard 2 React main context
 const MaterialUI = createContext();
 
