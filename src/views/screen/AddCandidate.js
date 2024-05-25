@@ -31,16 +31,13 @@ import { database, storage } from "firebase.js";
 
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { getDatabase, ref as dbRef, set, onValue, query, orderByChild, equalTo } from "firebase/database";
 import Candidates from "components/CreatePoll/Candidates";
-import { id } from "ethers/lib/utils";
 
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 
 import * as XLSX from 'xlsx';
 import { Button as AntdButton, message, Upload } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
 
 
 let ps = null;

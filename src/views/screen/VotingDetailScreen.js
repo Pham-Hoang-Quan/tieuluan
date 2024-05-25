@@ -22,20 +22,14 @@ import {
     UncontrolledAlert,
 } from "reactstrap";
 
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import CircularProgress from '@mui/material/CircularProgress';
 
 // core components
 import IndexNavbar from "components/Navbars/IndexNavbar";
 import { AppContext } from "context/AppContext";
 
-import { database, storage } from "firebase.js";
 
 
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { getDatabase, ref as dbRef, set, onValue, query, orderByChild, equalTo, child, get } from "firebase/database";
-import Candidates from "components/CreatePoll/Candidates";
-import { id } from "ethers/lib/utils";
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
@@ -47,7 +41,7 @@ import moment from "moment";
 // import Loading from "components/CreatePoll/Loading";
 import { BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis, Bar, LabelList, Cell, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
 
-import { ethers } from "ethers";
+
 import QRCodeCan from "components/DetailVoting/QRCodeCan";
 import CandidatesList from "components/DetailVoting/CandidatesList";
 import Top5Table from "../../components/DetailVoting/Top5Table";
@@ -59,12 +53,12 @@ import axios from "axios";
 let ps = null;
 
 export default function VotingDetail() {
-    const {authUser, setAuthUser} = useContext(AppContext);
+    const { authUser, setAuthUser } = useContext(AppContext);
     const [candidates, setCandidates] = useState('');
     const [votingInfo, setVotingInfo] = useState();
     const [votedModal, setVotedModal] = useState(false);
     const [trans, setTrans] = useState([]);
-    
+
     const [isLoading, setIsLoading] = useState(false)
     const [userIsVoted, setUserIsVoted] = useState(false);
     const location = useLocation();
@@ -83,18 +77,13 @@ export default function VotingDetail() {
     function generateRandomId() {
         return Date.now(); // Sử dụng thời gian hiện tại làm ID, có thể không đảm bảo tính duy nhất trong một số trường hợp.
     }
-    const smartContractAddress = "0xe9fE15A6Be86a57c9A8dbB3dcD4441CFE24471C0"
-    const signer = new ethers.providers.Web3Provider(
-        window.ethereum,
-    ).getSigner();
-    const sdk = ThirdwebSDK.fromSigner(signer, "sepolia");
+
     // hàm bình chọn , thêm một bình chọn vào mảng votes trên blockchain
     const handleAddVoteTransOnBC = async (canId) => {
         setIsLoading(true);
         try {
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
-            const contract = await sdk.getContract(smartContractAddress);
             const res = await axios.post(`/api/smartcontract/addVote`, {
                 _id: 'v' + id,
                 _idUser: userInfor._id,
@@ -122,7 +111,6 @@ export default function VotingDetail() {
         try {
             const canIdString = canId.toString()
             const id = generateRandomId().toString();
-            const contract = await sdk.getContract(smartContractAddress);
             const res = await axios.post(`/api/smartcontract/updateVote`, {
                 _id: 'v' + id,
                 _idUser: userInfor._id,
@@ -184,9 +172,10 @@ export default function VotingDetail() {
     const getTransWithVotingId = async () => {
         try {
             if (idVoting) {
-                const contract = await sdk.getContract(smartContractAddress);
-                const transData = await contract.call("getvotesByIdVoting", [idVoting]);
+                const res = await fetch(`/api/smartcontract/getVoteByIdVoting/${idVoting}`)
+                const transData = await res.json();
                 setTrans(transData);
+                console.log(transData);
             }
         } catch (error) {
             console.error(error);
@@ -196,9 +185,9 @@ export default function VotingDetail() {
         const userId = userInfor ? userInfor._id : null;
         if (userId) {
             trans.map((tran) => {
-                if (tran.idUser == userId) {
+                if (tran[1] == userId) {
                     setUserIsVoted(true)
-                    setCanIdOld(tran.idCandidate)
+                    setCanIdOld(tran[2])
                 } else {
                     console.log("User no vote")
                 }
@@ -288,27 +277,9 @@ export default function VotingDetail() {
         ); // hoặc thông báo lỗi
     }
 
-    const carouselItems = votingInfo ? [
-        {
-            src: `${votingInfo.imgUrl}`,
-            altText: "Slide 1",
-            caption: "",
-        },
-        {
-            src: `${votingInfo.imgUrl}`,
-            altText: "Slide 2",
-            caption: "",
-        },
-        {
-            src: `${votingInfo.imgUrl}`,
-            altText: "Slide 3",
-            caption: "",
-        },
-    ] : [];
-
     const mergedData = candidates.map(candidate => {
         const countVote = trans.reduce((count, tran) => {
-            return tran.idCandidate?.toString() === candidate._id?.toString() ? count + 1 : count;
+            return tran[2]?.toString() === candidate._id?.toString() ? count + 1 : count;
         }, 0);
         return { ...candidate, countVote };
     }).sort((a, b) => b.countVote - a.countVote);
@@ -436,7 +407,7 @@ export default function VotingDetail() {
                                 {userInfor &&
                                     <QRCodeCan userId={userInfor._id} votingId={idVoting}></QRCodeCan>
                                 }
-                                
+
 
                                 <Row>
                                     <Col>
